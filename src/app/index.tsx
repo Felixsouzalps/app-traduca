@@ -5,6 +5,7 @@ import { View, Text, Image, TextInput, Pressable, ScrollView } from "react-nativ
 
 import globalStyle from "@/styles/globalStyles";
 import loginStyles from "@/styles/loginStyles";
+
 import { SafeAreaView } from "react-native-safe-area-context";
  
 export default function LoginScreen() {
@@ -83,8 +84,11 @@ export default function LoginScreen() {
                   style={({ pressed }) => [
                     loginStyles.btnEntrar,
                     pressed && loginStyles.btnEntrarPressed,
+
+                    
                   ]}
-                 
+                      onPress={() => router.navigate("/home")} 
+           
                 >
                   <Text style={loginStyles.txtEntrar}>Entrar</Text>
                 </Pressable>
