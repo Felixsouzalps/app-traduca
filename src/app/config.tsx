@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Image, Pressable, Switch, Text, View } from "react-native";
 
 import AlterarSenhaModal from "@/components/alterar-senha-modal";
+import ModalIphone from "@/components/modal-iphone";
 import TelaComAbas from "@/components/tela-com-abas";
 import configStyles from "@/styles/configStyles";
 import { cores } from "@/styles/variaveis";
@@ -74,7 +75,7 @@ function ItemLista({ item }: { item: ItemConfig }) {
       )}
 
       {item.acao === "instalar" && (
-        <Pressable style={configStyles.btnInstalar}>
+        <Pressable style={configStyles.btnInstalar} onPress={item.onPress}>
           <Text style={configStyles.txtBtnInstalar}>Instalar</Text>
         </Pressable>
       )}
@@ -93,6 +94,7 @@ function ItemLista({ item }: { item: ItemConfig }) {
 
 export default function ConfigScreen() {
   const [modalAlterarSenhaVisivel, setModalAlterarSenhaVisivel] = useState(false);
+  const [modalIphoneVisivel, setModalIphoneVisivel] = useState(false);
 
   return (
     <TelaComAbas
@@ -143,9 +145,16 @@ export default function ConfigScreen() {
 
       <View style={configStyles.secao}>
         <Text style={configStyles.secaoTitulo}>App</Text>
-        {appItens.map((item) => (
-          <ItemLista key={item.titulo} item={item} />
-        ))}
+        {appItens.map((item) => {
+          const onPress =
+            item.titulo === "Instalar aplicativo"
+              ? () => setModalIphoneVisivel(true)
+              : item.titulo === "Personalizar app"
+                ? () => router.navigate("/personalizar")
+                : undefined;
+
+          return <ItemLista key={item.titulo} item={{ ...item, onPress }} />;
+        })}
       </View>
 
       <Pressable style={configStyles.btnSair} onPress={() => router.navigate("/")}>
@@ -155,6 +164,11 @@ export default function ConfigScreen() {
       <AlterarSenhaModal
         visible={modalAlterarSenhaVisivel}
         onClose={() => setModalAlterarSenhaVisivel(false)}
+      />
+
+      <ModalIphone
+        visible={modalIphoneVisivel}
+        onClose={() => setModalIphoneVisivel(false)}
       />
     </TelaComAbas>
   );
