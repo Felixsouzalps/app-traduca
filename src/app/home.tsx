@@ -1,9 +1,10 @@
+import { useState } from "react";
 import { router } from "expo-router";
-
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import homeStyles from "@/styles/homeStyles";
+import NotificacoesModal from "@/components/notificacaoModal";
 
 const menuItens = [
   {
@@ -39,6 +40,8 @@ const menuItens = [
 ] as const;
 
 export default function HomeScreen() {
+  const [notificacoesVisible, setNotificacoesVisible] = useState(false);
+
   return (
     <SafeAreaView style={homeStyles.container} edges={["top"]}>
       <View style={homeStyles.cabecalho}>
@@ -56,7 +59,10 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <Pressable style={homeStyles.btnNotificacao}>
+        <Pressable
+          style={homeStyles.btnNotificacao}
+          onPress={() => setNotificacoesVisible(true)}
+        >
           <Image
             source={require("@/assets/images/imgIcon/sino-azul.png")}
             style={homeStyles.iconeNotificacao}
@@ -75,10 +81,18 @@ export default function HomeScreen() {
             onPress={() => router.navigate(item.rota as never)}
           >
             <Image source={item.icone} style={homeStyles.cardIcone} />
-            <Text style={homeStyles.cardTexto}>{item.label}</Text>
+
+            <Text style={homeStyles.cardTexto}>
+              {item.label}
+            </Text>
           </Pressable>
         ))}
       </ScrollView>
+
+      <NotificacoesModal
+        visible={notificacoesVisible}
+        onClose={() => setNotificacoesVisible(false)}
+      />
     </SafeAreaView>
   );
 }
