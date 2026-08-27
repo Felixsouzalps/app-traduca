@@ -9,18 +9,18 @@ const personalizarStyles = StyleSheet.create({
 
   hexRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     marginBottom: 16,
   },
 
   hexInput: {
     flex: 1,
+    minWidth: 0,
     height: 42,
     marginHorizontal: 4,
     borderWidth: 2,
     borderColor: cores.cinza,
     borderRadius: 24,
-    paddingHorizontal: 10,
+    paddingHorizontal: 6,
     textAlign: "center",
     fontSize: 13,
     fontWeight: "bold",

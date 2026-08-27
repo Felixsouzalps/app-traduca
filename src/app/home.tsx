@@ -1,8 +1,10 @@
 import { router } from "expo-router";
+import { useState } from "react";
 
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import CentralNotificacoesModal from "@/components/central-notificacoes-modal";
 import homeStyles from "@/styles/homeStyles";
 
 const menuItens = [
@@ -39,6 +41,8 @@ const menuItens = [
 ] as const;
 
 export default function HomeScreen() {
+  const [modalNotificacoesVisivel, setModalNotificacoesVisivel] = useState(false);
+
   return (
     <SafeAreaView style={homeStyles.container} edges={["top"]}>
       <View style={homeStyles.cabecalho}>
@@ -56,7 +60,10 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <Pressable style={homeStyles.btnNotificacao}>
+        <Pressable
+          style={homeStyles.btnNotificacao}
+          onPress={() => setModalNotificacoesVisivel(true)}
+        >
           <Image
             source={require("@/assets/images/imgIcon/sino-azul.png")}
             style={homeStyles.iconeNotificacao}
@@ -79,6 +86,11 @@ export default function HomeScreen() {
           </Pressable>
         ))}
       </ScrollView>
+
+      <CentralNotificacoesModal
+        visible={modalNotificacoesVisivel}
+        onClose={() => setModalNotificacoesVisivel(false)}
+      />
     </SafeAreaView>
   );
 }

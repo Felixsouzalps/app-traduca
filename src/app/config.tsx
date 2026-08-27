@@ -125,6 +125,7 @@ export default function ConfigScreen() {
             subtitulo: "Visualize suas aulas e gerencie suas faltas",
             icone: require("@/assets/images/imgIcon/desempenho-azul.png"),
             acao: "seta",
+            onPress: () => router.navigate("/desempenho"),
           }}
         />
       </View>

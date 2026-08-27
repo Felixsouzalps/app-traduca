@@ -9,10 +9,12 @@ import personalizarStyles from "@/styles/personalizarStyles";
 import { cores } from "@/styles/variaveis";
 
 function hslParaHex(h: number, s: number, l: number) {
-  const a = (s * Math.min(l, 1 - l)) / 100;
+  const sFracao = s / 100;
+  const lFracao = l / 100;
+  const a = sFracao * Math.min(lFracao, 1 - lFracao);
   const f = (n: number) => {
     const k = (n + h / 30) % 12;
-    const cor = l / 100 - a * Math.max(-1, Math.min(k - 3, Math.min(9 - k, 1)));
+    const cor = lFracao - a * Math.max(-1, Math.min(k - 3, Math.min(9 - k, 1)));
     return Math.round(255 * cor)
       .toString(16)
       .padStart(2, "0");
