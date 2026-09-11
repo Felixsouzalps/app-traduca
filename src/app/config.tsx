@@ -158,6 +158,19 @@ export default function ConfigScreen() {
         })}
       </View>
 
+      <View style={configStyles.secao}>
+        <Text style={configStyles.secaoTitulo}>Contato</Text>
+        <ItemLista
+          item={{
+            titulo: "Tire sua dúvida",
+            subtitulo: "Peça mais informações ao professor",
+            icone: require("@/assets/images/imgIcon/chat.png"),
+            acao: "seta",
+            onPress: () => router.navigate("/duvida"),
+          }}
+        />
+      </View>
+
       <Pressable style={configStyles.btnSair} onPress={() => router.navigate("/")}>
         <Text style={configStyles.txtBtnSair}>Sair da conta</Text>
       </Pressable>
