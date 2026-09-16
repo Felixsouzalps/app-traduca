@@ -8,7 +8,7 @@ import duvidaStyles from "@/styles/duvidaStyles";
 import { cores } from "@/styles/variaveis";
 
 const WHATSAPP_NUMERO = "5511988161211";
-const EMAIL_CONTATO = "contato@traduca.com.br";
+const EMAIL_CONTATO = "anddrem89@gmail.com";
 
 function formatarWhatsapp(numero: string) {
   const semDDI = numero.replace(/^55/, "");
