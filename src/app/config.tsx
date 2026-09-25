@@ -5,6 +5,7 @@ import { Image, Pressable, Switch, Text, View } from "react-native";
 
 import AlterarSenhaModal from "@/components/alterar-senha-modal";
 import ModalIphone from "@/components/modal-iphone";
+import ModalPermissaoInstalacao from "@/components/modal-permissao-instalacao";
 import TelaComAbas from "@/components/tela-com-abas";
 import configStyles from "@/styles/configStyles";
 import { cores } from "@/styles/variaveis";
@@ -95,6 +96,7 @@ function ItemLista({ item }: { item: ItemConfig }) {
 export default function ConfigScreen() {
   const [modalAlterarSenhaVisivel, setModalAlterarSenhaVisivel] = useState(false);
   const [modalIphoneVisivel, setModalIphoneVisivel] = useState(false);
+  const [modalPermissaoVisivel, setModalPermissaoVisivel] = useState(false);
 
   return (
     <TelaComAbas
@@ -149,7 +151,7 @@ export default function ConfigScreen() {
         {appItens.map((item) => {
           const onPress =
             item.titulo === "Instalar aplicativo"
-              ? () => setModalIphoneVisivel(true)
+              ? () => setModalPermissaoVisivel(true)
               : item.titulo === "Personalizar app"
                 ? () => router.navigate("/personalizar")
                 : undefined;
@@ -171,7 +173,7 @@ export default function ConfigScreen() {
         />
       </View>
 
-      <Pressable style={configStyles.btnSair} onPress={() => router.navigate("/")}>
+      <Pressable style={configStyles.btnSair} onPress={() => router.replace("/")}>
         <Text style={configStyles.txtBtnSair}>Sair da conta</Text>
       </Pressable>
 
@@ -183,6 +185,15 @@ export default function ConfigScreen() {
       <ModalIphone
         visible={modalIphoneVisivel}
         onClose={() => setModalIphoneVisivel(false)}
+      />
+
+      <ModalPermissaoInstalacao
+        visible={modalPermissaoVisivel}
+        onClose={() => setModalPermissaoVisivel(false)}
+        onPermitir={() => {
+          setModalPermissaoVisivel(false);
+          setModalIphoneVisivel(true);
+        }}
       />
     </TelaComAbas>
   );
