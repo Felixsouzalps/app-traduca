@@ -1,56 +1,149 @@
-# Welcome to your Expo app 👋
+# Traduca App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplicativo mobile do **Traduca Idiomas**, desenvolvido com React Native e Expo para apoiar a experiência dos alunos no acompanhamento de aulas, atividades, agenda, curso e materiais.
 
-## Get started
+O projeto faz parte do sistema Traduca Idiomas e está preparado para consumir a API do backend Laravel do projeto.
 
-1. Install dependencies
+## 📱 Sobre o aplicativo
 
-   ```bash
-   npm install
-   ```
+O Traduca App centraliza recursos acadêmicos e de acompanhamento do aluno em uma interface mobile.
 
-2. Start the app
+Principais áreas do aplicativo:
 
-   ```bash
-   npx expo start
-   ```
+* **Início** — acesso rápido às principais funcionalidades.
+* **Aulas** — acesso às aulas e recursos relacionados ao curso.
+* **Agenda** — visualização dos compromissos e aulas agendadas.
+* **Atividades** — acompanhamento das atividades disponibilizadas pelo professor.
+* **Curso** — informações relacionadas ao curso e idioma estudado.
+* **Materiais** — acesso aos materiais de apoio.
+* **IA** — integração com os recursos de inteligência artificial do Traduca.
+* **Progresso** — acompanhamento do desempenho e evolução do aluno.
+* **Perfil** — informações e configurações da conta.
+* **Notificações** — comunicação de atualizações importantes para o aluno.
+* **Reagendamento** — solicitação de alteração de aula com comunicação ao professor.
 
-In the output, you'll find options to open the app in a
+## 🛠️ Tecnologias
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+* React Native
+* Expo SDK 57
+* TypeScript
+* Expo Router
+* React Native Reanimated
+* React Native Gesture Handler
+* React Native SVG
+* Expo Image
+* API REST em Laravel
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 📂 Estrutura do projeto
 
-## Get a fresh project
+A aplicação utiliza o **Expo Router** para navegação baseada em arquivos.
 
-When you're ready, run:
-
-```bash
-npm run reset-project
+```text
+traduca-app/
+├── app/              # Telas e rotas da aplicação
+├── components/       # Componentes reutilizáveis
+├── styles/           # Estilos e variáveis visuais
+├── assets/           # Imagens, ícones e recursos
+├── app.json          # Configurações do Expo
+├── package.json      # Dependências e scripts
+└── tsconfig.json     # Configuração do TypeScript
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## 🚀 Como executar
 
-### Other setup steps
+### Pré-requisitos
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+Tenha instalado:
 
-## Learn more
+* Node.js
+* npm
+* Expo
+* Android Studio ou um dispositivo Android, caso queira executar no Android
 
-To learn more about developing your project with Expo, look at the following resources:
+### Instalação
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Clone o repositório:
 
-## Join the community
+```bash
+git clone https://github.com/Felixsouzalps/app-traduca.git
+```
 
-Join our community of developers creating universal apps.
+Entre na pasta:
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+cd app-traduca
+```
+
+Instale as dependências:
+
+```bash
+npm install
+```
+
+Inicie o projeto:
+
+```bash
+npx expo start
+```
+
+Depois, escolha uma das opções apresentadas pelo Expo para executar o aplicativo.
+
+## 🔌 Integração com a API
+
+O aplicativo foi desenvolvido para trabalhar em conjunto com o backend do **Traduca Idiomas**.
+
+A comunicação com a API permite centralizar dados como:
+
+* autenticação do aluno;
+* aulas e agenda;
+* atividades e respostas;
+* curso e idioma;
+* materiais;
+* progresso;
+* notificações;
+* recursos de inteligência artificial.
+
+A URL da API deve ser configurada de acordo com o ambiente em que o aplicativo estiver sendo executado.
+
+> Não coloque credenciais, senhas ou chaves privadas diretamente no código-fonte.
+
+## 🎨 Interface
+
+O aplicativo utiliza uma identidade visual própria do Traduca Idiomas, com componentes reutilizáveis, ícones e animações para tornar a navegação mais fluida.
+
+As transições e interações são desenvolvidas principalmente com recursos do **React Native Reanimated** e componentes de interação do React Native.
+
+## 📚 Funcionalidades
+
+O aplicativo está sendo desenvolvido para oferecer uma experiência completa ao aluno, incluindo:
+
+* acompanhamento das aulas;
+* calendário e agenda;
+* reagendamento de aulas;
+* atividades;
+* materiais de estudo;
+* conteúdos em áudio;
+* materiais de leitura;
+* acompanhamento do curso;
+* notificações;
+* progresso acadêmico;
+* integração com inteligência artificial;
+* comunicação com o backend Laravel.
+
+## 📌 Status do projeto
+
+Projeto acadêmico em desenvolvimento para o **Traduca Idiomas**.
+
+Novas funcionalidades, integrações com o backend e melhorias de interface continuam sendo implementadas durante o desenvolvimento.
+
+## 👥 Projeto
+
+**Traduca Idiomas**
+
+Aplicativo desenvolvido como parte do projeto acadêmico do **Senac**.
+
+---
+
+## 📄 Licença
+
+Este projeto possui um arquivo de licença no repositório. Consulte o arquivo [LICENSE](./LICENSE) para mais informações.
