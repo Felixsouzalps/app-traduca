@@ -8,6 +8,7 @@ import ModalIphone from "@/components/modal-iphone";
 import ModalPermissaoInstalacao from "@/components/modal-permissao-instalacao";
 import TelaComAbas from "@/components/tela-com-abas";
 import configStyles from "@/styles/configStyles";
+import { fotoAlunoUrl, logoutAluno, primeiroNomeAluno } from "@/services/api";
 import { cores } from "@/styles/variaveis";
 
 type ItemConfig = {
@@ -96,7 +97,11 @@ function ItemLista({ item }: { item: ItemConfig }) {
 export default function ConfigScreen() {
   const [modalAlterarSenhaVisivel, setModalAlterarSenhaVisivel] = useState(false);
   const [modalIphoneVisivel, setModalIphoneVisivel] = useState(false);
+<<<<<<< HEAD
   const [modalPermissaoVisivel, setModalPermissaoVisivel] = useState(false);
+=======
+  const foto = fotoAlunoUrl();
+>>>>>>> d05c4167590cc5908018b103dd92c8035acd053c
 
   return (
     <TelaComAbas
@@ -105,14 +110,18 @@ export default function ConfigScreen() {
     >
       <View style={configStyles.cardBoasVindas}>
         <View style={configStyles.avatar}>
-          <Image
-            source={require("@/assets/images/imgIcon/usuario.png")}
-            style={configStyles.avatarIcone}
-          />
+          {foto ? (
+            <Image source={{ uri: foto }} style={configStyles.avatarFoto} />
+          ) : (
+            <Image
+              source={require("@/assets/images/imgIcon/usuario.png")}
+              style={configStyles.avatarIcone}
+            />
+          )}
         </View>
 
         <View style={{ flex: 1 }}>
-          <Text style={configStyles.boasVindasTitulo}>Olá, Aluno!</Text>
+          <Text style={configStyles.boasVindasTitulo}>Olá, {primeiroNomeAluno()}!</Text>
           <Text style={configStyles.boasVindasSubtitulo}>
             Acesse e organize sua experiência no app
           </Text>
@@ -173,7 +182,17 @@ export default function ConfigScreen() {
         />
       </View>
 
+<<<<<<< HEAD
       <Pressable style={configStyles.btnSair} onPress={() => router.replace("/")}>
+=======
+      <Pressable
+        style={configStyles.btnSair}
+        onPress={async () => {
+          await logoutAluno();
+          router.replace("/");
+        }}
+      >
+>>>>>>> d05c4167590cc5908018b103dd92c8035acd053c
         <Text style={configStyles.txtBtnSair}>Sair da conta</Text>
       </Pressable>
 

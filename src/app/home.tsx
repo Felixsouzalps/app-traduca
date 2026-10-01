@@ -10,7 +10,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import CentralNotificacoesModal from "@/components/central-notificacoes-modal";
 import homeStyles from "@/styles/homeStyles";
+<<<<<<< HEAD
 import NotificacoesModal from "@/components/notificacaoModal";
+=======
+import { fotoAlunoUrl, primeiroNomeAluno } from "@/services/api";
+>>>>>>> d05c4167590cc5908018b103dd92c8035acd053c
 
 const menuItens = [
   {
@@ -50,22 +54,30 @@ export default function HomeScreen() {
   const [notificacoesVisible, setNotificacoesVisible] = useState(false);
 =======
   const [modalNotificacoesVisivel, setModalNotificacoesVisivel] = useState(false);
+<<<<<<< HEAD
 >>>>>>> 12efd0b0311c6053b9f4536ea8d1612ccee6a85a
+=======
+  const foto = fotoAlunoUrl();
+>>>>>>> d05c4167590cc5908018b103dd92c8035acd053c
 
   return (
     <SafeAreaView style={homeStyles.container} edges={["top"]}>
       <View style={homeStyles.cabecalho}>
         <View style={homeStyles.cabecalhoEsquerda}>
           <View style={homeStyles.avatar}>
-            <Image
-              source={require("@/assets/images/imgIcon/usuario.png")}
-              style={homeStyles.avatarIcone}
-            />
+            {foto ? (
+              <Image source={{ uri: foto }} style={homeStyles.avatarFoto} />
+            ) : (
+              <Image
+                source={require("@/assets/images/imgIcon/usuario.png")}
+                style={homeStyles.avatarIcone}
+              />
+            )}
           </View>
 
           <View>
             <Text style={homeStyles.boasVindas}>Bem-vindo</Text>
-            <Text style={homeStyles.nomeAluno}>Aluno!</Text>
+            <Text style={homeStyles.nomeAluno}>{primeiroNomeAluno()}!</Text>
           </View>
         </View>
 
