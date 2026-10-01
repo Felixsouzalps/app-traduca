@@ -4,6 +4,7 @@ import { Image, Pressable, Text, View } from "react-native";
 
 import BandeiraIdioma from "@/components/bandeira-idioma";
 import CircularProgress from "@/components/circular-progress";
+import ModalEntrarAula from "@/components/modal-entrar-aula";
 import TelaComAbas from "@/components/tela-com-abas";
 import aulasStyles from "@/styles/aulasStyles";
 import { cores } from "@/styles/variaveis";
@@ -20,6 +21,16 @@ const idiomas = [
 
 export default function AulasScreen() {
   const [idiomaSelecionado, setIdiomaSelecionado] = useState<string>("ingles");
+  const [modalAulaVisivel, setModalAulaVisivel] = useState(false);
+  const [carregandoAula, setCarregandoAula] = useState(false);
+
+  const confirmarEntrada = () => {
+    setCarregandoAula(true);
+    setTimeout(() => {
+      setCarregandoAula(false);
+      setModalAulaVisivel(false);
+    }, 1800);
+  };
 
   return (
     <TelaComAbas titulo="Seja bem-vindo(a) Aluno(a)!">
@@ -63,7 +74,7 @@ export default function AulasScreen() {
           </View>
         </View>
 
-        <Pressable style={aulasStyles.btnEntrarAula}>
+        <Pressable style={aulasStyles.btnEntrarAula} onPress={() => setModalAulaVisivel(true)}>
           <Image
             source={require("@/assets/images/imgIcon/play.png")}
             style={aulasStyles.iconeEntrarAula}
@@ -77,6 +88,8 @@ export default function AulasScreen() {
           <View style={aulasStyles.ponto} />
         </View>
       </View>
+
+      <ModalEntrarAula visible={modalAulaVisivel} carregando={carregandoAula} onClose={() => setModalAulaVisivel(false)} onConfirmar={confirmarEntrada} />
 
       {/* Progresso do curso */}
       <View style={aulasStyles.secaoTitulo}>

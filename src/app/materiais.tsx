@@ -1,9 +1,11 @@
 import { router } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
-import { Image, Pressable, Text, View } from "react-native";
+import { Animated, Image, Pressable, Text, TextInput, View } from "react-native";
 
 import TelaComAbas from "@/components/tela-com-abas";
+import AbasCurso from "@/components/abas-curso";
+import ModalPermissaoInstalacao from "@/components/modal-permissao-instalacao";
 import cursoStyles from "@/styles/cursoStyles";
 import materiaisStyles from "@/styles/materiaisStyles";
 
@@ -35,20 +37,44 @@ const materiais = [
 
 export default function MateriaisScreen() {
   const [filtroSelecionado, setFiltroSelecionado] = useState<string>("Todas");
+  const [buscaAberta, setBuscaAberta] = useState(false);
+  const [termoBusca, setTermoBusca] = useState("");
+  const [materialSelecionado, setMaterialSelecionado] = useState<string | null>(null);
+  const larguraBusca = useRef(new Animated.Value(36)).current;
+
+  const fecharBusca = () => {
+    setBuscaAberta(false);
+    setTermoBusca("");
+    Animated.timing(larguraBusca, {
+      toValue: 36,
+      duration: 250,
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const alternarBusca = () => {
+    const abrir = !buscaAberta;
+    if (!abrir) {
+      fecharBusca();
+      return;
+    }
+
+    setBuscaAberta(true);
+    Animated.timing(larguraBusca, {
+      toValue: 180,
+      duration: 250,
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const materiaisFiltrados = materiais.filter((material) => {
+    const termo = termoBusca.trim().toLowerCase();
+    return !termo || `${material.titulo} ${material.subtitulo}`.toLowerCase().includes(termo);
+  });
 
   return (
     <TelaComAbas titulo="Materiais" subtitulo="Utilize os materiais de apoio">
-      <View style={cursoStyles.abasLinha}>
-        <Pressable style={cursoStyles.abaItem} onPress={() => router.navigate("/curso")}>
-          <Text style={cursoStyles.abaItemTexto}>Curso</Text>
-        </Pressable>
-
-        <View style={[cursoStyles.abaItem, cursoStyles.abaItemSelecionada]}>
-          <Text style={[cursoStyles.abaItemTexto, cursoStyles.abaItemTextoSelecionada]}>
-            Materiais
-          </Text>
-        </View>
-      </View>
+      <AbasCurso abaSelecionada="materiais" onSelecionar={(aba) => aba === "curso" && router.navigate("/curso")} />
 
       <Pressable style={materiaisStyles.seletorModulo}>
         <Text style={materiaisStyles.seletorModuloTexto}>
@@ -60,7 +86,7 @@ export default function MateriaisScreen() {
         />
       </Pressable>
 
-      <View style={materiaisStyles.filtrosLinha}>
+      <View style={[materiaisStyles.filtrosLinha, { position: "relative" }]}>
         {filtros.map((filtro) => {
           const selecionado = filtro === filtroSelecionado;
 
@@ -85,17 +111,43 @@ export default function MateriaisScreen() {
           );
         })}
 
-        <Pressable style={materiaisStyles.btnBusca}>
+        <Animated.View
+          style={[
+            materiaisStyles.btnBusca,
+            {
+              position: "absolute",
+              right: 0,
+              width: larguraBusca,
+              backgroundColor: "#FFFFFF",
+              zIndex: 20,
+              elevation: 10,
+            },
+          ]}
+        >
+          {buscaAberta && (
+            <TextInput
+              autoFocus
+              value={termoBusca}
+              onChangeText={setTermoBusca}
+              onBlur={fecharBusca}
+              placeholder="Pesquisar"
+              placeholderTextColor="#888888"
+              style={materiaisStyles.inputBusca}
+              returnKeyType="search"
+            />
+          )}
+          <Pressable onPress={alternarBusca} hitSlop={8}>
           <Image
             source={require("@/assets/images/imgIcon/buscar.png")}
             style={materiaisStyles.iconeBusca}
           />
-        </Pressable>
+          </Pressable>
+        </Animated.View>
       </View>
 
       <Text style={materiaisStyles.secaoTitulo}>Materiais de Apoio</Text>
 
-      {materiais.map((material) => (
+      {materiaisFiltrados.map((material) => (
         <View key={material.titulo} style={materiaisStyles.materialCard}>
           <View style={materiaisStyles.materialIconeBox}>
             <Image
@@ -122,7 +174,7 @@ export default function MateriaisScreen() {
                 style={materiaisStyles.materialAcaoIcone}
               />
             </Pressable>
-            <Pressable>
+            <Pressable onPress={() => setMaterialSelecionado(material.titulo)}>
               <Image
                 source={require("@/assets/images/imgIcon/download-azul.png")}
                 style={materiaisStyles.materialAcaoIcone}
@@ -131,6 +183,19 @@ export default function MateriaisScreen() {
           </View>
         </View>
       ))}
+
+      <ModalPermissaoInstalacao
+        visible={materialSelecionado !== null}
+        onClose={() => setMaterialSelecionado(null)}
+        onPermitir={() => setMaterialSelecionado(null)}
+        titulo="Permitir download?"
+        mensagem="O aplicativo precisa da sua permissão para baixar este material no dispositivo."
+        textoAcao="Baixar"
+      />
+
+      {materiaisFiltrados.length === 0 && (
+        <Text style={materiaisStyles.placeholderTexto}>Nenhum material encontrado</Text>
+      )}
 
       <View style={materiaisStyles.placeholder}>
         <Text style={materiaisStyles.placeholderTexto}>

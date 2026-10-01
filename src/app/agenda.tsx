@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Image, Pressable, Text, View } from "react-native";
 
 import BandeiraIdioma, { IdiomaId } from "@/components/bandeira-idioma";
+import ModalEntrarAula from "@/components/modal-entrar-aula";
 import TelaComAbas from "@/components/tela-com-abas";
 import agendaStyles from "@/styles/agendaStyles";
 
@@ -49,6 +50,16 @@ const aulasDoDia: {
 ];
 
 export default function AgendaScreen() {
+  const [modalAulaVisivel, setModalAulaVisivel] = useState(false);
+  const [carregandoAula, setCarregandoAula] = useState(false);
+
+  const confirmarEntrada = () => {
+    setCarregandoAula(true);
+    setTimeout(() => {
+      setCarregandoAula(false);
+      setModalAulaVisivel(false);
+    }, 1800);
+  };
   const [filtroSelecionado, setFiltroSelecionado] = useState<string>("Hoje");
 
   return (
@@ -98,7 +109,7 @@ export default function AgendaScreen() {
         </View>
 
         <View style={agendaStyles.cardDestaqueBotoes}>
-          <Pressable style={agendaStyles.btnEntrar}>
+          <Pressable style={agendaStyles.btnEntrar} onPress={() => setModalAulaVisivel(true)}>
             <Image
               source={require("@/assets/images/imgIcon/play.png")}
               style={agendaStyles.iconeBtnEntrar}
@@ -115,6 +126,13 @@ export default function AgendaScreen() {
           </Pressable>
         </View>
       </View>
+
+      <ModalEntrarAula
+        visible={modalAulaVisivel}
+        carregando={carregandoAula}
+        onClose={() => setModalAulaVisivel(false)}
+        onConfirmar={confirmarEntrada}
+      />
 
       {/* Calendário */}
       <View style={agendaStyles.secaoTitulo}>
@@ -233,7 +251,10 @@ export default function AgendaScreen() {
 
           {aula.ativo ? (
             <View style={agendaStyles.aulaCardBotoes}>
-              <Pressable style={agendaStyles.btnEntrarPequeno}>
+              <Pressable
+                style={agendaStyles.btnEntrarPequeno}
+                onPress={() => setModalAulaVisivel(true)}
+              >
                 <Text style={agendaStyles.txtBtnEntrarPequeno}>Entrar</Text>
               </Pressable>
               <Pressable style={agendaStyles.btnReagendarPequeno}>
