@@ -1,7 +1,6 @@
+
 import { router, useFocusEffect } from "expo-router";
-
 import { useCallback, useState } from "react";
-
 import {
   ActivityIndicator,
   Image,
@@ -12,7 +11,9 @@ import {
 } from "react-native";
 
 import BandeiraDesenho from "@/components/bandeira-desenho";
-import BandeiraIdioma, { IdiomaId } from "@/components/bandeira-idioma";
+import BandeiraIdioma, {
+  idiomaDoCurso,
+} from "@/components/bandeira-idioma";
 import CircularProgress from "@/components/circular-progress";
 import ModalEntrarAula from "@/components/modal-entrar-aula";
 import EstadoVazio from "@/components/estado-vazio";
@@ -27,31 +28,22 @@ import {
   CursoModulos,
   ModuloDetalhe,
   primeiroNomeAluno,
+  tituloModulo,
 } from "@/services/api";
+
+import {
+  cursoDaLista,
+  escolherCurso,
+  lerCursoEscolhido,
+} from "@/services/curso-escolhido";
 
 import aulasStyles from "@/styles/aulasStyles";
 import { cores } from "@/styles/variaveis";
 
-// "Inglês" → "ingles"; idioma sem bandeira cadastrada → null.
-function idiomaDoCurso(nomeCurso: string): IdiomaId | null {
-  const nome = nomeCurso
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-
-  if (nome.includes("ingles")) return "ingles";
-  if (nome.includes("portugues")) return "portugues";
-  if (nome.includes("italiano")) return "italiano";
-
-  return null;
-}
-
-// "2026-12-12" + "18:00" → "Hoje, 18:00" / "12/12, 18:00".
 function dataDaAula(aula: Aula): string {
   if (!aula.data) return "Data a definir";
 
   const [ano, mes, dia] = aula.data.split("-");
-
   const hoje = new Date();
 
   const ehHoje =
@@ -67,18 +59,13 @@ function dataDaAula(aula: Aula): string {
 const doisDigitos = (n: number) => String(n).padStart(2, "0");
 
 export default function AulasScreen() {
-  // Seleção de idioma/curso.
-  const [idiomaSelecionado, setIdiomaSelecionado] =
-    useState<string>("ingles");
-
-  // Modal de entrada na aula.
   const [modalAulaVisivel, setModalAulaVisivel] = useState(false);
   const [carregandoAula, setCarregandoAula] = useState(false);
 
-  // Dados vindos da API.
   const [cursos, setCursos] = useState<Curso[]>([]);
-  const [idCurso, setIdCurso] = useState<number | null>(null);
+  const [trocas, setTrocas] = useState(0);
   const [idMostrado, setIdMostrado] = useState<number | null>(null);
+
   const [curso, setCurso] = useState<CursoModulos | null>(null);
   const [modulo, setModulo] = useState<ModuloDetalhe | null>(null);
 
@@ -86,67 +73,73 @@ export default function AulasScreen() {
   const [erro, setErro] = useState("");
   const [erroLink, setErroLink] = useState("");
 
-  // Confirma a entrada no modal.
-  const confirmarEntrada = () => {
-    setCarregandoAula(true);
-
-    setTimeout(() => {
-      setCarregandoAula(false);
-      setModalAulaVisivel(false);
-    }, 1800);
-  };
-
-  // Busca os dados toda vez que a tela aparece ou o aluno troca de curso.
   useFocusEffect(
     useCallback(() => {
+      let ativo = true;
+
       async function carregar() {
         try {
           setCarregando(true);
+          setErro("");
 
           const lista = await buscarCursos();
+
+          if (!ativo) return;
 
           setCursos(lista);
 
           if (lista.length === 0) {
+            setCurso(null);
+            setModulo(null);
+            setIdMostrado(null);
             setErro("Você ainda não está matriculado em nenhum curso.");
             return;
           }
 
-          const atual =
-            lista.find((c) => c.id_curso === idCurso) ?? lista[0];
+          const cursoSalvo = await lerCursoEscolhido();
+
+          if (!ativo) return;
+
+          const atual = cursoDaLista(lista, cursoSalvo) ?? lista[0];
 
           setIdMostrado(atual.id_curso);
 
           const dadosCurso = await buscarModulosCurso(atual.id_curso);
 
+          if (!ativo) return;
+
           setCurso(dadosCurso);
 
-          // Módulo em que o aluno está
-          // ou o último módulo liberado se já concluiu tudo.
           const moduloAtual =
             dadosCurso.modulos.find((m) => m.em_andamento) ??
             [...dadosCurso.modulos].reverse().find((m) => m.liberado);
 
-          setModulo(
-            moduloAtual
-              ? await buscarModulo(moduloAtual.id_modulo)
-              : null,
-          );
+          const detalhe = moduloAtual
+            ? await buscarModulo(moduloAtual.id_modulo)
+            : null;
 
-          setErro("");
+          if (!ativo) return;
+
+          setModulo(detalhe);
         } catch (e) {
+          if (!ativo) return;
+
           setErro(
             e instanceof Error
               ? e.message
-              : "Não foi possível carregar as aulas.",
+              : "Não foi possível carregar as aulas."
           );
         } finally {
-          setCarregando(false);
+          if (ativo) setCarregando(false);
         }
       }
 
       carregar();
-    }, [idCurso]),
+
+      return () => {
+        ativo = false;
+      };
+    }, [trocas])
   );
 
   const cursoAtual = cursos.find((c) => c.id_curso === idMostrado);
@@ -156,7 +149,7 @@ export default function AulasScreen() {
     : null;
 
   const pendentes = (modulo?.aulas ?? []).filter(
-    (a) => !a.concluida,
+    (a) => !a.concluida
   );
 
   const proxima = pendentes[0] ?? null;
@@ -167,11 +160,10 @@ export default function AulasScreen() {
 
   const idModulo = modulo?.modulo.id_modulo;
 
-  // O círculo conta somente as aulas.
   const percentualAulas =
     curso && curso.total_aulas > 0
       ? Math.round(
-          (curso.aulas_concluidas / curso.total_aulas) * 100,
+          (curso.aulas_concluidas / curso.total_aulas) * 100
         )
       : 0;
 
@@ -179,7 +171,7 @@ export default function AulasScreen() {
     if (idModulo) {
       router.navigate({
         pathname: "/curso-modulo",
-        params: { id: idModulo },
+        params: { id: String(idModulo) },
       });
     }
   }
@@ -189,7 +181,7 @@ export default function AulasScreen() {
 
     if (!proxima?.link_aula) {
       setErroLink(
-        "O professor ainda não cadastrou o link desta aula.",
+        "O professor ainda não cadastrou o link desta aula."
       );
       return;
     }
@@ -201,41 +193,38 @@ export default function AulasScreen() {
     }
   }
 
-  type Aluno = {
-  id_aluno: number;
-  nome_aluno: string;
-  email_aluno: string;
-  foto_aluno: string | null;
-};
+  async function confirmarEntrada() {
+    setCarregandoAula(true);
 
-// BUSCA O NOME DO ALUNO LOGADO NO STORAGE (AsyncStorage ou SecureStore)
-async function buscarAlunoLogado(): Promise<Aluno | null> {
-  try {
-    const dados =
-      Platform.OS === "web"
-        ? await AsyncStorage.getItem("traduca_aluno")
-        : await SecureStore.getItemAsync("traduca_aluno");
-
-    if (!dados) {
-      return null;
+    try {
+      await entrarNaAula();
+    } finally {
+      setCarregandoAula(false);
+      setModalAulaVisivel(false);
     }
-
-    return JSON.parse(dados) as Aluno;
-  } catch (erro) {
-    console.error("Erro ao recuperar aluno:", erro);
-    return null;
   }
-}
+
+  async function selecionarCurso(idCurso: number) {
+    try {
+      setErro("");
+      await escolherCurso(idCurso);
+      setIdMostrado(idCurso);
+      setTrocas((n) => n + 1);
+    } catch (e) {
+      setErro(
+        e instanceof Error
+          ? e.message
+          : "Não foi possível selecionar esse curso."
+      );
+    }
+  }
 
   return (
     <TelaComAbas
       titulo={`Seja bem-vindo(a) ${primeiroNomeAluno()}!`}
     >
       {carregando && (
-        <ActivityIndicator
-          size="large"
-          color={cores.azul}
-        />
+        <ActivityIndicator size="large" color={cores.azul} />
       )}
 
       {!carregando && erro ? (
@@ -266,6 +255,18 @@ async function buscarAlunoLogado(): Promise<Aluno | null> {
                     {cursoAtual.nome_nivel}
                   </Text>
                 </View>
+
+                {modulo && (
+                  <Text
+                    style={aulasStyles.moduloAtualTexto}
+                    numberOfLines={1}
+                  >
+                    {tituloModulo(
+                      modulo.modulo.nome_modulo,
+                      modulo.modulo.ordem_modulo
+                    )}
+                  </Text>
+                )}
               </View>
 
               <Pressable
@@ -288,7 +289,6 @@ async function buscarAlunoLogado(): Promise<Aluno | null> {
                   source={require("@/assets/images/imgIcon/professor.png")}
                   style={aulasStyles.infoPillIcone}
                 />
-
                 <Text style={aulasStyles.infoPillTexto}>
                   {professor
                     ? `Prof° ${professor}`
@@ -301,7 +301,6 @@ async function buscarAlunoLogado(): Promise<Aluno | null> {
                   source={require("@/assets/images/imgIcon/relogio-azul.png")}
                   style={aulasStyles.infoPillIcone}
                 />
-
                 <Text style={aulasStyles.infoPillTexto}>
                   {proxima
                     ? `Próxima aula\n${dataDaAula(proxima)}`
@@ -313,13 +312,15 @@ async function buscarAlunoLogado(): Promise<Aluno | null> {
             {proxima && (
               <Pressable
                 style={aulasStyles.btnEntrarAula}
-                onPress={() => setModalAulaVisivel(true)}
+                onPress={() => {
+                  setErroLink("");
+                  setModalAulaVisivel(true);
+                }}
               >
                 <Image
                   source={require("@/assets/images/imgIcon/play.png")}
                   style={aulasStyles.iconeEntrarAula}
                 />
-
                 <Text style={aulasStyles.txtEntrarAula}>
                   Entrar na aula
                 </Text>
@@ -355,9 +356,7 @@ async function buscarAlunoLogado(): Promise<Aluno | null> {
               Progresso do curso
             </Text>
 
-            <Pressable
-              onPress={() => router.navigate("/curso")}
-            >
+            <Pressable onPress={() => router.navigate("/curso")}>
               <Text style={aulasStyles.secaoLink}>
                 Ver Detalhes
               </Text>
@@ -372,24 +371,19 @@ async function buscarAlunoLogado(): Promise<Aluno | null> {
               corProgresso={cores.verde}
               corTrilha={cores.azulClaro}
             >
-              <Text
-                style={aulasStyles.progressoTextoCentral}
-              >
+              <Text style={aulasStyles.progressoTextoCentral}>
                 {percentualAulas}%
               </Text>
             </CircularProgress>
 
             <View style={aulasStyles.progressoColuna}>
               <Text style={aulasStyles.progressoTitulo}>
-                {curso.total_aulas > 0 &&
-                percentualAulas === 100
+                {curso.total_aulas > 0 && percentualAulas === 100
                   ? "Todas as aulas concluídas!"
                   : "Continue evoluindo!"}
               </Text>
 
-              <View
-                style={aulasStyles.progressoStatsLinha}
-              >
+              <View style={aulasStyles.progressoStatsLinha}>
                 <View>
                   <Text
                     style={[
@@ -399,17 +393,12 @@ async function buscarAlunoLogado(): Promise<Aluno | null> {
                   >
                     {curso.aulas_concluidas}
                   </Text>
-
-                  <Text
-                    style={aulasStyles.progressoStatLegenda}
-                  >
+                  <Text style={aulasStyles.progressoStatLegenda}>
                     aulas concluídas
                   </Text>
                 </View>
 
-                <View
-                  style={aulasStyles.progressoDivisor}
-                />
+                <View style={aulasStyles.progressoDivisor} />
 
                 <View>
                   <Text
@@ -419,15 +408,11 @@ async function buscarAlunoLogado(): Promise<Aluno | null> {
                     ]}
                   >
                     {Math.max(
-                      curso.total_aulas -
-                        curso.aulas_concluidas,
-                      0,
+                      curso.total_aulas - curso.aulas_concluidas,
+                      0
                     )}
                   </Text>
-
-                  <Text
-                    style={aulasStyles.progressoStatLegenda}
-                  >
+                  <Text style={aulasStyles.progressoStatLegenda}>
                     aulas restantes
                   </Text>
                 </View>
@@ -469,16 +454,10 @@ async function buscarAlunoLogado(): Promise<Aluno | null> {
               )}
 
               <View style={{ flex: 1 }}>
-                <Text
-                  style={aulasStyles.proximaAulaTitulo}
-                >
-                  Aula {doisDigitos(aula.numero)} -{" "}
-                  {aula.titulo}
+                <Text style={aulasStyles.proximaAulaTitulo}>
+                  Aula {doisDigitos(aula.numero)} - {aula.titulo}
                 </Text>
-
-                <Text
-                  style={aulasStyles.proximaAulaSubtitulo}
-                >
+                <Text style={aulasStyles.proximaAulaSubtitulo}>
                   {aula.duracao_minutos
                     ? `${aula.duracao_minutos} min · `
                     : ""}
@@ -493,7 +472,7 @@ async function buscarAlunoLogado(): Promise<Aluno | null> {
             </Pressable>
           ))}
 
-          {/* Selecione o idioma */}
+          {/* Seleção de idioma/curso */}
           {cursos.length > 1 && (
             <>
               <View
@@ -502,19 +481,15 @@ async function buscarAlunoLogado(): Promise<Aluno | null> {
                   { marginBottom: 12 },
                 ]}
               >
-                <Text
-                  style={aulasStyles.secaoTituloTexto}
-                >
+                <Text style={aulasStyles.secaoTituloTexto}>
                   Selecione o idioma
                 </Text>
               </View>
 
               <View style={aulasStyles.idiomasLinha}>
                 {cursos.map((c) => {
-                  const selecionado =
-                    c.id_curso === idMostrado;
-
-                  const id = idiomaDoCurso(c.nome_curso);
+                  const selecionado = c.id_curso === idMostrado;
+                  const idIdioma = idiomaDoCurso(c.nome_curso);
 
                   return (
                     <Pressable
@@ -524,18 +499,12 @@ async function buscarAlunoLogado(): Promise<Aluno | null> {
                         selecionado &&
                           aulasStyles.cardIdiomaSelecionado,
                       ]}
-                      onPress={() =>
-                        setIdCurso(c.id_curso)
-                      }
+                      onPress={() => selecionarCurso(c.id_curso)}
                     >
-                      <View
-                        style={
-                          aulasStyles.cardIdiomaBandeira
-                        }
-                      >
-                        {id ? (
+                      <View style={aulasStyles.cardIdiomaBandeira}>
+                        {idIdioma ? (
                           <BandeiraDesenho
-                            idioma={id}
+                            idioma={idIdioma}
                             largura={48}
                             altura={32}
                           />
@@ -550,9 +519,7 @@ async function buscarAlunoLogado(): Promise<Aluno | null> {
                         )}
                       </View>
 
-                      <Text
-                        style={aulasStyles.cardIdiomaTexto}
-                      >
+                      <Text style={aulasStyles.cardIdiomaTexto}>
                         {c.nome_curso}
                       </Text>
                     </Pressable>

@@ -1,10 +1,13 @@
+<<<<<<< HEAD
 
 import { useState } from "react";
+=======
+>>>>>>> f1d6091b2b5498168d1b777d1a17ee1a0c8925b1
 import { router } from "expo-router";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import CentralNotificacoesModal from "@/components/central-notificacoes-modal";
+import SinoNotificacoes from "@/components/sino-notificacoes";
 import TabBarInferior from "@/components/tab-bar-inferior";
 
 import telaPadraoStyles from "@/styles/telaPadraoStyles";
@@ -15,6 +18,7 @@ type TelaComAbasProps = {
   children: React.ReactNode;
 };
 
+<<<<<<< HEAD
 export default function TelaComAbas({
   titulo,
   subtitulo,
@@ -23,6 +27,9 @@ export default function TelaComAbas({
   const [modalNotificacoesVisivel, setModalNotificacoesVisivel] =
     useState(false);
 
+=======
+export default function TelaComAbas({ titulo, subtitulo, children }: TelaComAbasProps) {
+>>>>>>> f1d6091b2b5498168d1b777d1a17ee1a0c8925b1
   return (
     <SafeAreaView
       style={telaPadraoStyles.container}
@@ -54,6 +61,7 @@ export default function TelaComAbas({
             ) : null}
           </View>
 
+<<<<<<< HEAD
           <Pressable
             style={telaPadraoStyles.btnNotificacao}
             onPress={() => setModalNotificacoesVisivel(true)}
@@ -65,17 +73,18 @@ export default function TelaComAbas({
               style={telaPadraoStyles.iconeNotificacao}
             />
           </Pressable>
+=======
+          <SinoNotificacoes
+            estiloBotao={telaPadraoStyles.btnNotificacao}
+            estiloIcone={telaPadraoStyles.iconeNotificacao}
+          />
+>>>>>>> f1d6091b2b5498168d1b777d1a17ee1a0c8925b1
         </View>
 
         {children}
       </ScrollView>
 
       <TabBarInferior />
-
-      <CentralNotificacoesModal
-        visible={modalNotificacoesVisivel}
-        onClose={() => setModalNotificacoesVisivel(false)}
-      />
     </SafeAreaView>
   );
 }

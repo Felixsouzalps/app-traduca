@@ -2,9 +2,19 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 
+<<<<<<< HEAD
 
 export const API_URL = "http://localhost:8081/api/v1";
 // Chave onde o login fica salvo no aparelho (vale 30 dias, igual ao token).
+=======
+import { apagarToken, guardarToken, lerToken } from "@/services/cofre";
+import { esquecerCursoEscolhido } from "@/services/curso-escolhido";
+
+export const API_URL = "https://traduca.adminfo.dev.br/api/v1";
+
+// Chave onde os dados do aluno (nome, e-mail, foto) ficam salvos no aparelho.
+// O token NÃO fica aqui: no celular ele vai para o cofre (ver cofre.ts).
+>>>>>>> f1d6091b2b5498168d1b777d1a17ee1a0c8925b1
 const CHAVE_SESSAO = "traduca_sessao";
 
 export type Aluno = {
@@ -22,14 +32,17 @@ export const sessao: { token: string | null; aluno: Aluno | null } = {
 };
 
 async function salvarSessao() {
+  if (sessao.token) await guardarToken(sessao.token);
   try {
-    await AsyncStorage.setItem(CHAVE_SESSAO, JSON.stringify(sessao));
+    await AsyncStorage.setItem(CHAVE_SESSAO, JSON.stringify({ aluno: sessao.aluno }));
   } catch {}
 }
 
 async function limparSessao() {
   sessao.token = null;
   sessao.aluno = null;
+  await apagarToken();
+  await esquecerCursoEscolhido();
   try {
     await AsyncStorage.removeItem(CHAVE_SESSAO);
   } catch {}
@@ -37,10 +50,19 @@ async function limparSessao() {
 
 // Chamado ao abrir o app: recupera o login salvo e atualiza os dados do aluno.
 export async function carregarSessao() {
+  let salvo: { token?: string | null; aluno?: Aluno | null } = {};
   try {
-    const salvo = await AsyncStorage.getItem(CHAVE_SESSAO);
-    if (salvo) Object.assign(sessao, JSON.parse(salvo));
+    salvo = JSON.parse((await AsyncStorage.getItem(CHAVE_SESSAO)) ?? "{}");
   } catch {}
+
+  sessao.aluno = salvo.aluno ?? null;
+  sessao.token = await lerToken();
+
+  // Versão antiga do app guardava o token junto com os dados: muda para o cofre.
+  if (!sessao.token && salvo.token) {
+    sessao.token = salvo.token;
+    await salvarSessao();
+  }
 
   if (!sessao.token) return;
 
@@ -60,6 +82,14 @@ export async function carregarSessao() {
   } catch {
     // sem internet: segue com os dados salvos
   }
+}
+
+// Mensagem quando o site recusa o token (401): a do site, se ele explicou o
+// motivo (ex.: cadastro inativo); senão, login vencido.
+function mensagemSaida(json: { success?: boolean; message?: string } | null): string {
+  return json?.success === false && json.message
+    ? json.message
+    : "Sua sessão expirou. Faça login novamente.";
 }
 
 // Sair da conta: apaga o token no servidor e o login salvo no aparelho.
@@ -94,7 +124,7 @@ async function apiGet<T>(caminho: string): Promise<T> {
     // Login vencido ou apagado: volta para a tela de login.
     await limparSessao();
     router.replace("/");
-    throw new Error("Sua sessão expirou. Faça login novamente.");
+    throw new Error(mensagemSaida(json));
   }
   if (!resposta.ok || !json?.success) {
     throw new Error(json?.message ?? "Não foi possível carregar os dados.");
@@ -197,6 +227,7 @@ export type Material = {
   ordem_modulo: number;
   tem_arquivo: boolean;
   extensao: string | null;
+  tamanho_bytes: number | null;
   concluido: boolean;
   url_download: string;
 };
@@ -206,18 +237,28 @@ export function buscarMateriais(idCurso: number) {
   return apiGet<Material[]>(`/aluno/cursos/${idCurso}/materiais`);
 }
 
+// 2400000 → "2,4 MB"; 8000 → "8 KB"; null → "".
+export function formatarTamanho(bytes: number | null): string {
+  if (bytes === null) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1).replace(".", ",")} MB`;
+}
+
 // Envia dados pra API usando o token do aluno logado.
-async function apiPost<T>(caminho: string, corpo: unknown): Promise<T> {
+// FormData (envio de arquivo, ex.: foto) vai como formulário; o resto como JSON.
+async function apiEnviar<T>(metodo: "POST" | "PUT", caminho: string, corpo: unknown): Promise<T> {
+  const ehFormulario = corpo instanceof FormData;
   let resposta: Response;
   try {
     resposta = await fetch(`${API_URL}${caminho}`, {
-      method: "POST",
+      method: metodo,
       headers: {
         Accept: "application/json",
-        "Content-Type": "application/json",
+        ...(ehFormulario ? {} : { "Content-Type": "application/json" }),
         Authorization: `Bearer ${sessao.token}`,
       },
-      body: JSON.stringify(corpo),
+      body: ehFormulario ? corpo : JSON.stringify(corpo),
     });
   } catch {
     throw new Error("Sem conexão com o servidor. Verifique sua internet.");
@@ -228,12 +269,81 @@ async function apiPost<T>(caminho: string, corpo: unknown): Promise<T> {
   if (resposta.status === 401) {
     await limparSessao();
     router.replace("/");
-    throw new Error("Sua sessão expirou. Faça login novamente.");
+    throw new Error(mensagemSaida(json));
   }
   if (!resposta.ok || !json?.success) {
     throw new Error(json?.message ?? "Não foi possível completar a solicitação.");
   }
   return json as T;
+}
+
+function apiPost<T>(caminho: string, corpo: unknown) {
+  return apiEnviar<T>("POST", caminho, corpo);
+}
+
+function apiPut<T>(caminho: string, corpo: unknown) {
+  return apiEnviar<T>("PUT", caminho, corpo);
+}
+
+export type Perfil = Aluno & {
+  telefone_aluno: string | null;
+  data_nasc_aluno: string | null;
+  status_aluno: string | null;
+  cursos: { id_curso: number; nome_curso: string | null; nome_nivel: string | null }[];
+};
+
+// Tela Perfil: dados do aluno + idioma/nível dos cursos.
+export function buscarPerfil() {
+  return apiGet<Perfil>("/aluno/perfil");
+}
+
+// Atualiza nome/e-mail/foto na sessão (Home, Config e Perfil leem daqui).
+async function atualizarAlunoNaSessao(aluno: Aluno) {
+  sessao.aluno = aluno;
+  await salvarSessao();
+}
+
+// Troca o e-mail (pede a senha atual). Devolve a mensagem de sucesso.
+export async function alterarEmail(email: string, senhaAtual: string): Promise<string> {
+  const resposta = await apiPut<{ message: string; data: Aluno }>("/aluno/perfil/email", {
+    email_aluno: email,
+    senha_atual: senhaAtual,
+  });
+  await atualizarAlunoNaSessao(resposta.data);
+  return resposta.message;
+}
+
+// Modal "Alterar senha". Os outros aparelhos do aluno são desconectados.
+export async function alterarSenha(
+  senhaAtual: string,
+  novaSenha: string,
+  confirmacao: string
+): Promise<string> {
+  const resposta = await apiPut<{ message: string }>("/aluno/perfil/senha", {
+    senha_atual: senhaAtual,
+    nova_senha: novaSenha,
+    nova_senha_confirmation: confirmacao,
+  });
+  return resposta.message;
+}
+
+// Envia a foto escolhida (uri do celular, ou o File no navegador).
+export async function enviarFoto(foto: {
+  uri: string;
+  nome: string;
+  tipo: string;
+  arquivoWeb?: Blob;
+}): Promise<string> {
+  const formulario = new FormData();
+  if (foto.arquivoWeb) {
+    formulario.append("foto_aluno", foto.arquivoWeb, foto.nome);
+  } else {
+    // No celular o React Native aceita { uri, name, type } no lugar do arquivo.
+    formulario.append("foto_aluno", { uri: foto.uri, name: foto.nome, type: foto.tipo } as unknown as Blob);
+  }
+  const resposta = await apiPost<{ message: string; data: Aluno }>("/aluno/perfil/foto", formulario);
+  await atualizarAlunoNaSessao(resposta.data);
+  return resposta.message;
 }
 
 export type AulaAgenda = {
@@ -331,11 +441,113 @@ export async function responderAtividade(id: number, respostas: Record<number, s
   return resposta.message;
 }
 
+export type Duvida = {
+  id_duvida: number;
+  assunto: string;
+  mensagem: string;
+  resposta_professor: string | null;
+  status: "pendente" | "respondida";
+  criado_em: string | null;
+  respondido_em: string | null;
+};
+
+// Tela Dúvida: lista as dúvidas que o aluno já enviou.
+export function buscarDuvidas() {
+  return apiGet<Duvida[]>("/aluno/duvidas");
+}
+
+// Envia uma nova dúvida ao professor. Devolve a dúvida criada.
+export async function enviarDuvida(assunto: string, mensagem: string): Promise<Duvida> {
+  const resposta = await apiPost<{ message: string; data: Duvida }>("/aluno/duvidas", {
+    assunto_duvida: assunto,
+    mensagem_duvida: mensagem,
+  });
+  return resposta.data;
+}
+
+export type Desempenho = {
+  curso: string | null;
+  nivel: string | null;
+  presenca: {
+    total_aulas: number;
+    presentes: number;
+    faltas: number;
+    justificadas: number;
+    percentual: number;
+  };
+  materiais: {
+    total: number;
+    vistos: number;
+    percentual: number;
+  };
+  minutos_estudados: number;
+  ultimas_presencas: {
+    id_presenca: number;
+    data: string | null;
+    aula_titulo: string | null;
+    status: "presente" | "falta" | "justificado";
+    justificativa: { status: "pendente" | "aceita" | "recusada"; resposta_professor: string | null } | null;
+  }[];
+};
+
+// Tela Desempenho: presença, materiais vistos e minutos estudados do curso.
+export function buscarDesempenho(idCurso: number) {
+  return apiGet<Desempenho>(`/aluno/cursos/${idCurso}/desempenho`);
+}
+
+// Aluno justifica uma falta. Devolve a mensagem de sucesso da API.
+export async function justificarFalta(idPresenca: number, motivo: string): Promise<string> {
+  const resposta = await apiPost<{ message: string }>(`/aluno/presencas/${idPresenca}/justificar`, {
+    motivo_justificativa: motivo,
+  });
+  return resposta.message;
+}
+
+export type CardChatbot = {
+  type: "schedule" | "progress";
+  title: string;
+  items: Record<string, string | number>[];
+};
+
+export type RespostaChatbot = {
+  text: string;
+  sugestoes: string[];
+  card: CardChatbot | null;
+  offline?: boolean;
+};
+
+// Envia uma mensagem pro Assistente (IA) e devolve a resposta, sugestões de
+// pergunta e, às vezes, um card (agenda/progresso). Pode levar alguns segundos.
+export function enviarMensagemChatbot(mensagem: string) {
+  return apiPost<RespostaChatbot>("/aluno/chatbot/mensagem", { mensagem });
+}
+
 // "2026-07-30" → "30/07/2026".
 export function formatarData(data: string | null): string {
   if (!data) return "";
   const [ano, mes, dia] = data.split("-");
   return `${dia}/${mes}/${ano}`;
+}
+
+export type Notificacao = {
+  id: number;
+  mensagem: string;
+  link: string | null; // tela do app que abre ao tocar (ex.: "/atividade?id=12")
+  lida: boolean;
+  data: string | null; // "2026-10-10 14:30"
+};
+
+// Sino: avisos do aluno + quantos não lidos.
+export function buscarNotificacoes() {
+  return apiGet<{ nao_lidas: number; notificacoes: Notificacao[] }>("/aluno/notificacoes");
+}
+
+export async function marcarNotificacaoLida(id: number): Promise<void> {
+  await apiPost(`/aluno/notificacoes/${id}/lida`, {});
+}
+
+export async function marcarTodasNotificacoesLidas(): Promise<void> {
+  await apiPost("/aluno/notificacoes/lidas", {});
 }
 
 // Nome do módulo para a tela: se já foi cadastrado como "Módulo 01: ...", usa como está;
@@ -397,4 +609,61 @@ export async function loginAluno(email: string, senha: string): Promise<Aluno> {
   sessao.aluno = json.data.aluno;
   await salvarSessao();
   return json.data.aluno;
+}
+
+// Tela "Esqueci a senha": pede o código de 6 dígitos por e-mail.
+// Sempre retorna sucesso (mesma mensagem exista ou não o e-mail).
+export async function esqueciSenha(email: string): Promise<void> {
+  let resposta: Response;
+  try {
+    resposta = await fetch(`${API_URL}/aluno/senha/esqueci`, {
+      method: "POST",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({ email_aluno: email }),
+    });
+  } catch {
+    throw new Error("Sem conexão com o servidor. Verifique sua internet.");
+  }
+
+  const json = await resposta.json().catch(() => null);
+
+  if (resposta.status === 429) {
+    throw new Error("Muitas tentativas. Aguarde um minuto e tente novamente.");
+  }
+  if (!resposta.ok || !json?.success) {
+    throw new Error(json?.message ?? "Não foi possível enviar o código.");
+  }
+}
+
+// Tela "Redefinir senha": confere o código recebido por e-mail e troca a senha.
+export async function redefinirSenha(
+  email: string,
+  codigo: string,
+  novaSenha: string,
+  confirmacao: string
+): Promise<void> {
+  let resposta: Response;
+  try {
+    resposta = await fetch(`${API_URL}/aluno/senha/redefinir`, {
+      method: "POST",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email_aluno: email,
+        codigo,
+        nova_senha: novaSenha,
+        nova_senha_confirmation: confirmacao,
+      }),
+    });
+  } catch {
+    throw new Error("Sem conexão com o servidor. Verifique sua internet.");
+  }
+
+  const json = await resposta.json().catch(() => null);
+
+  if (resposta.status === 429) {
+    throw new Error("Muitas tentativas. Aguarde um minuto e tente novamente.");
+  }
+  if (!resposta.ok || !json?.success) {
+    throw new Error(json?.message ?? "Não foi possível redefinir a senha.");
+  }
 }

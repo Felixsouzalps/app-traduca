@@ -48,6 +48,20 @@ type AudioResposta = {
 
 const textoNota = (nota: number) => String(nota).replace(".", ",");
 
+function textoDaOpcao(letra: string, texto: string): string {
+  const letraEscapada = letra.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  const semLetra = texto.replace(
+    new RegExp(
+      `^\\s*(?:\\(${letraEscapada}\\)|${letraEscapada}\\s*[).:\\-–])\\s*`,
+      "i"
+    ),
+    ""
+  );
+
+  return semLetra.trim() ? semLetra : texto;
+}
+
 export default function AtividadeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
@@ -73,6 +87,8 @@ export default function AtividadeScreen() {
       setCarregando(false);
       return;
     }
+
+    setCarregando(true);
 
     try {
       const atividade = await buscarAtividade(id);
@@ -160,6 +176,7 @@ export default function AtividadeScreen() {
 
       await gravacao.prepareToRecordAsync();
       gravacao.record();
+
       setQuestaoGravando(idQuestao);
       setGravando(true);
     } catch (e) {
@@ -172,7 +189,9 @@ export default function AtividadeScreen() {
   }
 
   async function pararGravacao() {
-    if (!gravacao.isRecording || questaoGravando === null) return;
+    if (!gravacao.isRecording || questaoGravando === null) {
+      return;
+    }
 
     const idQuestao = questaoGravando;
 
@@ -236,17 +255,17 @@ export default function AtividadeScreen() {
 
       setSom(resultado);
       setReproduzindo(idQuestao);
-      resultado.play();
 
       resultado.addListener("playbackStatusUpdate", (status) => {
         if (status.didJustFinish) {
           setReproduzindo(null);
           resultado.remove();
-          setSom((atual) =>
-            atual === resultado ? null : atual
-          );
+
+          setSom((atual) => (atual === resultado ? null : atual));
         }
       });
+
+      resultado.play();
     } catch (e) {
       setErroEnvio(
         e instanceof Error
@@ -286,11 +305,11 @@ export default function AtividadeScreen() {
       return;
     }
 
+    const categoriaPronuncia =
+      String(dados.categoria?.codigo ?? "").toLowerCase() === "pronuncia";
+
     const faltando = dados.questoes.filter((q) => {
       const tipo = String(q.tipo).toLowerCase();
-      const categoriaPronuncia =
-        String(dados.categoria?.codigo ?? "").toLowerCase() ===
-        "pronuncia";
 
       const exigeAudio =
         tipo === "pronuncia" ||
@@ -343,9 +362,7 @@ export default function AtividadeScreen() {
       titulo="Atividade"
       subtitulo={dados?.curso ?? "Responda e acompanhe a correção"}
     >
-      {carregando && (
-        <ActivityIndicator size="large" color={cores.azul} />
-      )}
+      {carregando && <ActivityIndicator size="large" color={cores.azul} />}
 
       {!carregando && erro ? (
         <EstadoVazio
@@ -501,6 +518,7 @@ export default function AtividadeScreen() {
 
           {dados.questoes.map((questao) => {
             const tipo = String(questao.tipo).toLowerCase();
+
             const categoriaPronuncia =
               String(dados.categoria?.codigo ?? "").toLowerCase() ===
               "pronuncia";
@@ -533,8 +551,7 @@ export default function AtividadeScreen() {
                         key={opcao.letra}
                         style={[
                           atividadeStyles.opcao,
-                          selecionada &&
-                            atividadeStyles.opcaoSelecionada,
+                          selecionada && atividadeStyles.opcaoSelecionada,
                         ]}
                         disabled={!podeEditar}
                         onPress={() =>
@@ -550,8 +567,9 @@ export default function AtividadeScreen() {
                         >
                           {opcao.letra}
                         </Text>
+
                         <Text style={atividadeStyles.opcaoTexto}>
-                          {opcao.texto}
+                          {textoDaOpcao(opcao.letra, opcao.texto)}
                         </Text>
                       </Pressable>
                     );
@@ -565,9 +583,7 @@ export default function AtividadeScreen() {
                     {!audios[questao.id_questao] ? (
                       <Pressable
                         disabled={!podeEditar || gravando}
-                        onPress={() =>
-                          iniciarGravacao(questao.id_questao)
-                        }
+                        onPress={() => iniciarGravacao(questao.id_questao)}
                         style={{
                           backgroundColor:
                             gravando &&
@@ -597,9 +613,7 @@ export default function AtividadeScreen() {
 
                         <Pressable
                           disabled={!podeEditar}
-                          onPress={() =>
-                            ouvirGravacao(questao.id_questao)
-                          }
+                          onPress={() => ouvirGravacao(questao.id_questao)}
                           style={{
                             backgroundColor: "#E8EEFF",
                             padding: 12,
@@ -627,6 +641,7 @@ export default function AtividadeScreen() {
                                 delete novos[questao.id_questao];
                                 return novos;
                               });
+
                               setErroEnvio("");
                               setSucesso("");
                             }}
@@ -703,7 +718,7 @@ export default function AtividadeScreen() {
               </View>
               <View style={atividadeStyles.avisoErroConteudo}>
                 <Text style={atividadeStyles.avisoErroTitulo}>
-                  Microfone desativado
+                  Não foi possível concluir
                 </Text>
                 <Text style={atividadeStyles.txtErro}>{erroEnvio}</Text>
               </View>

@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { router } from "expo-router";
 import {
   Image,
@@ -10,7 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import CentralNotificacoesModal from "@/components/central-notificacoes-modal";
+import SinoNotificacoes from "@/components/sino-notificacoes";
 import { fotoAlunoUrl, primeiroNomeAluno } from "@/services/api";
 import homeStyles from "@/styles/homeStyles";
 
@@ -48,9 +47,6 @@ const menuItens = [
 ] as const;
 
 export default function HomeScreen() {
-  const [modalNotificacoesVisivel, setModalNotificacoesVisivel] =
-    useState(false);
-
   const foto = fotoAlunoUrl();
 
   return (
@@ -85,17 +81,10 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <Pressable
-          style={homeStyles.btnNotificacao}
-          onPress={() => setModalNotificacoesVisivel(true)}
-          accessibilityRole="button"
-          accessibilityLabel="Abrir notificações"
-        >
-          <Image
-            source={require("@/assets/images/imgIcon/sino-azul.png")}
-            style={homeStyles.iconeNotificacao}
-          />
-        </Pressable>
+        <SinoNotificacoes
+          estiloBotao={homeStyles.btnNotificacao}
+          estiloIcone={homeStyles.iconeNotificacao}
+        />
       </View>
 
       <ScrollView contentContainerStyle={homeStyles.grid}>
@@ -120,11 +109,17 @@ export default function HomeScreen() {
         ))}
       </ScrollView>
 
-      <CentralNotificacoesModal
-        visible={modalNotificacoesVisivel}
-        onClose={() => setModalNotificacoesVisivel(false)}
-      />
+      <Pressable
+        style={({ pressed }) => [
+          homeStyles.btnAssistente,
+          pressed && homeStyles.btnAssistentePressed,
+        ]}
+        onPress={() => router.navigate("/assistente")}
+      >
+        <Text style={homeStyles.btnAssistenteTexto}>
+          AI
+        </Text>
+      </Pressable>
     </SafeAreaView>
   );
 }
-

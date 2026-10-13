@@ -12,6 +12,7 @@ import {
 } from "react-native";
 
 import EstadoVazio from "@/components/estado-vazio";
+import SeletorCurso from "@/components/seletor-curso";
 import TelaComAbas from "@/components/tela-com-abas";
 import AbasCurso from "@/components/abas-curso";
 import ModalPermissaoInstalacao from "@/components/modal-permissao-instalacao";
@@ -19,8 +20,16 @@ import ModalPermissaoInstalacao from "@/components/modal-permissao-instalacao";
 import {
   buscarCursos,
   buscarMateriais,
+  Curso,
+  formatarTamanho,
   Material,
 } from "@/services/api";
+
+import {
+  cursoDaLista,
+  escolherCurso,
+  lerCursoEscolhido,
+} from "@/services/curso-escolhido";
 
 import { abrirMaterial } from "@/services/arquivos";
 import materiaisStyles from "@/styles/materiaisStyles";
@@ -82,6 +91,9 @@ export default function MateriaisScreen() {
     useState<Filtro>("Todas");
 
   const [materiais, setMateriais] = useState<Material[]>([]);
+  const [cursos, setCursos] = useState<Curso[]>([]);
+  const [idCurso, setIdCurso] = useState<number | undefined>(undefined);
+
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
   const [erroArquivo, setErroArquivo] = useState("");
@@ -92,62 +104,83 @@ export default function MateriaisScreen() {
 
   const [moduloSelecionado, setModuloSelecionado] =
     useState<number | null>(null);
-
   const [mostrarModulos, setMostrarModulos] = useState(false);
+
   const [buscaAberta, setBuscaAberta] = useState(false);
   const [termoBusca, setTermoBusca] = useState("");
 
   const larguraBusca = useRef(new Animated.Value(36)).current;
 
-  // Atualiza os materiais sempre que a tela recebe foco.
-  useFocusEffect(
-    useCallback(() => {
-      let ativo = true;
+  // Carrega os materiais do curso escolhido pelo aluno.
+  const carregar = useCallback(async () => {
+    setCarregando(true);
+    setErro("");
+    setErroArquivo("");
 
-      async function carregar() {
-        setCarregando(true);
-        setErro("");
+    try {
+      const listaCursos = await buscarCursos();
 
-        try {
-          const cursos = await buscarCursos();
+      setCursos(listaCursos);
 
-          if (!ativo) return;
-
-          if (cursos.length === 0) {
-            setMateriais([]);
-            setErro(
-              "Você ainda não está matriculado em nenhum curso."
-            );
-            return;
-          }
-
-          const lista = await buscarMateriais(cursos[0].id_curso);
-
-          if (!ativo) return;
-
-          setMateriais(lista);
-        } catch (e) {
-          if (!ativo) return;
-
-          setErro(
-            e instanceof Error
-              ? e.message
-              : "Não foi possível carregar os materiais."
-          );
-        } finally {
-          if (ativo) {
-            setCarregando(false);
-          }
-        }
+      if (listaCursos.length === 0) {
+        setIdCurso(undefined);
+        setMateriais([]);
+        setErro("Você ainda não está matriculado em nenhum curso.");
+        return;
       }
 
-      carregar();
+      const cursoSalvo = await lerCursoEscolhido();
+      const atual =
+        cursoDaLista(listaCursos, cursoSalvo) ?? listaCursos[0];
 
-      return () => {
-        ativo = false;
-      };
-    }, [])
+      setIdCurso(atual.id_curso);
+
+      const listaMateriais = await buscarMateriais(atual.id_curso);
+      setMateriais(listaMateriais);
+    } catch (e) {
+      setErro(
+        e instanceof Error
+          ? e.message
+          : "Não foi possível carregar os materiais."
+      );
+    } finally {
+      setCarregando(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      void carregar();
+    }, [carregar])
   );
+
+  // Troca o curso e atualiza a preferência compartilhada entre telas.
+  async function trocarCurso(id: number) {
+    if (id === idCurso) return;
+
+    setCarregando(true);
+    setErro("");
+    setModuloSelecionado(null);
+    setMostrarModulos(false);
+
+    try {
+      await escolherCurso(id);
+
+      const listaMateriais = await buscarMateriais(id);
+
+      setIdCurso(id);
+      setMateriais(listaMateriais);
+      setErroArquivo("");
+    } catch (e) {
+      setErro(
+        e instanceof Error
+          ? e.message
+          : "Não foi possível carregar os materiais desse curso."
+      );
+    } finally {
+      setCarregando(false);
+    }
+  }
 
   // Identifica os módulos que possuem materiais.
   const modulos = materiais
@@ -163,7 +196,7 @@ export default function MateriaisScreen() {
     (modulo) => modulo.id_modulo === moduloSelecionado
   );
 
-  // Aplica simultaneamente os filtros de tipo, módulo e pesquisa.
+  // Aplica os filtros de tipo, módulo e pesquisa.
   const termo = termoBusca.trim().toLowerCase();
 
   const materiaisFiltrados = materiais.filter((material) => {
@@ -212,13 +245,11 @@ export default function MateriaisScreen() {
     modo: "ver" | "baixar"
   ) {
     setErroArquivo("");
-    setMaterialSelecionado(null);
     setBaixando(material.id_material);
 
     try {
       await abrirMaterial(material, modo);
 
-      // Atualiza a interface após a conclusão registrada pela API.
       setMateriais((lista) =>
         lista.map((item) =>
           item.id_material === material.id_material
@@ -226,6 +257,8 @@ export default function MateriaisScreen() {
             : item
         )
       );
+
+      setMaterialSelecionado(null);
     } catch (e) {
       setErroArquivo(
         e instanceof Error
@@ -244,16 +277,21 @@ export default function MateriaisScreen() {
     >
       <AbasCurso
         abaSelecionada="materiais"
-        onSelecionar={(aba) =>
-          aba === "curso" && router.navigate("/curso")
-        }
+        onSelecionar={(aba) => {
+          if (aba === "curso") {
+            router.navigate("/curso");
+          }
+        }}
+      />
+
+      <SeletorCurso
+        cursos={cursos}
+        idSelecionado={idCurso}
+        onEscolher={trocarCurso}
       />
 
       {carregando && (
-        <ActivityIndicator
-          size="large"
-          color={cores.azul}
-        />
+        <ActivityIndicator size="large" color={cores.azul} />
       )}
 
       {!carregando && erro ? (
@@ -267,15 +305,11 @@ export default function MateriaisScreen() {
         <>
           <Pressable
             style={materiaisStyles.seletorModulo}
-            onPress={() =>
-              setMostrarModulos((atual) => !atual)
-            }
+            onPress={() => setMostrarModulos((atual) => !atual)}
           >
             <Text style={materiaisStyles.seletorModuloTexto}>
               {moduloAtual
-                ? `${doisDigitos(moduloAtual.ordem_modulo)} - Módulo ${
-                    moduloAtual.nome_modulo
-                  }`
+                ? `${doisDigitos(moduloAtual.ordem_modulo)} - Módulo ${moduloAtual.nome_modulo}`
                 : "Todos os módulos"}
             </Text>
 
@@ -328,8 +362,7 @@ export default function MateriaisScreen() {
             ]}
           >
             {filtros.map((filtro) => {
-              const selecionado =
-                filtro === filtroSelecionado;
+              const selecionado = filtro === filtroSelecionado;
 
               return (
                 <Pressable
@@ -379,10 +412,7 @@ export default function MateriaisScreen() {
                 />
               )}
 
-              <Pressable
-                onPress={alternarBusca}
-                hitSlop={8}
-              >
+              <Pressable onPress={alternarBusca} hitSlop={8}>
                 <Image
                   source={require("@/assets/images/imgIcon/buscar.png")}
                   style={materiaisStyles.iconeBusca}
@@ -423,9 +453,7 @@ export default function MateriaisScreen() {
                   </Text>
 
                   {material.descricao ? (
-                    <Text
-                      style={materiaisStyles.materialSubtitulo}
-                    >
+                    <Text style={materiaisStyles.materialSubtitulo}>
                       {material.descricao}
                     </Text>
                   ) : null}
@@ -435,10 +463,12 @@ export default function MateriaisScreen() {
                       ? material.extensao.toUpperCase()
                       : "Sem arquivo"}
 
+                    {material.tamanho_bytes != null
+                      ? ` · ${formatarTamanho(material.tamanho_bytes)}`
+                      : ""}
+
                     {material.concluido ? (
-                      <Text
-                        style={materiaisStyles.materialConcluido}
-                      >
+                      <Text style={materiaisStyles.materialConcluido}>
                         {" "}· Concluído
                       </Text>
                     ) : null}
@@ -452,22 +482,17 @@ export default function MateriaisScreen() {
                     ) : (
                       <>
                         <Pressable
-                          onPress={() =>
-                            acessar(material, "ver")
-                          }
+                          onPress={() => void acessar(material, "ver")}
                           accessibilityRole="button"
                           accessibilityLabel={`Abrir ${material.titulo}`}
                         >
                           <Image
                             source={
-                              tipo === "audio" ||
-                              tipo === "video"
+                              tipo === "audio" || tipo === "video"
                                 ? require("@/assets/images/imgIcon/play.png")
                                 : require("@/assets/images/imgIcon/visualizar-azul.png")
                             }
-                            style={
-                              materiaisStyles.materialAcaoIcone
-                            }
+                            style={materiaisStyles.materialAcaoIcone}
                           />
                         </Pressable>
 
@@ -480,9 +505,7 @@ export default function MateriaisScreen() {
                         >
                           <Image
                             source={require("@/assets/images/imgIcon/download-azul.png")}
-                            style={
-                              materiaisStyles.materialAcaoIcone
-                            }
+                            style={materiaisStyles.materialAcaoIcone}
                           />
                         </Pressable>
                       </>
@@ -495,8 +518,7 @@ export default function MateriaisScreen() {
 
           {materiaisFiltrados.length === 0 && (
             <Text style={materiaisStyles.placeholderTexto}>
-              Nenhum material encontrado para os filtros
-              selecionados.
+              Nenhum material encontrado para os filtros selecionados.
             </Text>
           )}
 
@@ -525,4 +547,3 @@ export default function MateriaisScreen() {
     </TelaComAbas>
   );
 }
-
