@@ -201,6 +201,32 @@ export default function AulasScreen() {
     }
   }
 
+  type Aluno = {
+  id_aluno: number;
+  nome_aluno: string;
+  email_aluno: string;
+  foto_aluno: string | null;
+};
+
+// BUSCA O NOME DO ALUNO LOGADO NO STORAGE (AsyncStorage ou SecureStore)
+async function buscarAlunoLogado(): Promise<Aluno | null> {
+  try {
+    const dados =
+      Platform.OS === "web"
+        ? await AsyncStorage.getItem("traduca_aluno")
+        : await SecureStore.getItemAsync("traduca_aluno");
+
+    if (!dados) {
+      return null;
+    }
+
+    return JSON.parse(dados) as Aluno;
+  } catch (erro) {
+    console.error("Erro ao recuperar aluno:", erro);
+    return null;
+  }
+}
+
   return (
     <TelaComAbas
       titulo={`Seja bem-vindo(a) ${primeiroNomeAluno()}!`}

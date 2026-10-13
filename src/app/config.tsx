@@ -1,14 +1,20 @@
+
 import { router } from "expo-router";
 import { useState } from "react";
-
 import { Image, Pressable, Switch, Text, View } from "react-native";
 
 import AlterarSenhaModal from "@/components/alterar-senha-modal";
 import ModalIphone from "@/components/modal-iphone";
 import ModalPermissaoInstalacao from "@/components/modal-permissao-instalacao";
 import TelaComAbas from "@/components/tela-com-abas";
+
+import {
+  fotoAlunoUrl,
+  logoutAluno,
+  primeiroNomeAluno,
+} from "@/services/api";
+
 import configStyles from "@/styles/configStyles";
-import { fotoAlunoUrl, logoutAluno, primeiroNomeAluno } from "@/services/api";
 import { cores } from "@/styles/variaveis";
 
 type ItemConfig = {
@@ -59,9 +65,16 @@ function ItemLista({ item }: { item: ItemConfig }) {
   const [notificacoesAtivas, setNotificacoesAtivas] = useState(true);
 
   return (
-    <Pressable style={configStyles.itemCard} onPress={item.onPress}>
+    <Pressable
+      style={configStyles.itemCard}
+      onPress={item.acao === "notificacao" ? undefined : item.onPress}
+    >
       <View style={configStyles.itemIconeBox}>
-        <Image source={item.icone} style={configStyles.itemIcone} resizeMode="contain" />
+        <Image
+          source={item.icone}
+          style={configStyles.itemIcone}
+          resizeMode="contain"
+        />
       </View>
 
       <View style={configStyles.itemCorpo}>
@@ -77,7 +90,10 @@ function ItemLista({ item }: { item: ItemConfig }) {
       )}
 
       {item.acao === "instalar" && (
-        <Pressable style={configStyles.btnInstalar} onPress={item.onPress}>
+        <Pressable
+          style={configStyles.btnInstalar}
+          onPress={item.onPress}
+        >
           <Text style={configStyles.txtBtnInstalar}>Instalar</Text>
         </Pressable>
       )}
@@ -86,7 +102,10 @@ function ItemLista({ item }: { item: ItemConfig }) {
         <Switch
           value={notificacoesAtivas}
           onValueChange={setNotificacoesAtivas}
-          trackColor={{ false: cores.cinza, true: cores.azul }}
+          trackColor={{
+            false: cores.cinza,
+            true: cores.azul,
+          }}
           thumbColor={cores.branco}
         />
       )}
@@ -95,13 +114,15 @@ function ItemLista({ item }: { item: ItemConfig }) {
 }
 
 export default function ConfigScreen() {
-  const [modalAlterarSenhaVisivel, setModalAlterarSenhaVisivel] = useState(false);
+  const [modalAlterarSenhaVisivel, setModalAlterarSenhaVisivel] =
+    useState(false);
+
   const [modalIphoneVisivel, setModalIphoneVisivel] = useState(false);
-<<<<<<< HEAD
-  const [modalPermissaoVisivel, setModalPermissaoVisivel] = useState(false);
-=======
+
+  const [modalPermissaoVisivel, setModalPermissaoVisivel] =
+    useState(false);
+
   const foto = fotoAlunoUrl();
->>>>>>> d05c4167590cc5908018b103dd92c8035acd053c
 
   return (
     <TelaComAbas
@@ -111,7 +132,10 @@ export default function ConfigScreen() {
       <View style={configStyles.cardBoasVindas}>
         <View style={configStyles.avatar}>
           {foto ? (
-            <Image source={{ uri: foto }} style={configStyles.avatarFoto} />
+            <Image
+              source={{ uri: foto }}
+              style={configStyles.avatarFoto}
+            />
           ) : (
             <Image
               source={require("@/assets/images/imgIcon/usuario.png")}
@@ -121,7 +145,10 @@ export default function ConfigScreen() {
         </View>
 
         <View style={{ flex: 1 }}>
-          <Text style={configStyles.boasVindasTitulo}>Olá, {primeiroNomeAluno()}!</Text>
+          <Text style={configStyles.boasVindasTitulo}>
+            Olá, {primeiroNomeAluno()}!
+          </Text>
+
           <Text style={configStyles.boasVindasSubtitulo}>
             Acesse e organize sua experiência no app
           </Text>
@@ -130,6 +157,7 @@ export default function ConfigScreen() {
 
       <View style={configStyles.secao}>
         <Text style={configStyles.secaoTitulo}>Meu Progresso</Text>
+
         <ItemLista
           item={{
             titulo: "Desempenho",
@@ -143,6 +171,7 @@ export default function ConfigScreen() {
 
       <View style={configStyles.secao}>
         <Text style={configStyles.secaoTitulo}>Minha conta</Text>
+
         {minhaConta.map((item) => {
           const onPress =
             item.titulo === "Alterar senha"
@@ -151,12 +180,18 @@ export default function ConfigScreen() {
                 ? () => router.navigate("/perfil")
                 : undefined;
 
-          return <ItemLista key={item.titulo} item={{ ...item, onPress }} />;
+          return (
+            <ItemLista
+              key={item.titulo}
+              item={{ ...item, onPress }}
+            />
+          );
         })}
       </View>
 
       <View style={configStyles.secao}>
         <Text style={configStyles.secaoTitulo}>App</Text>
+
         {appItens.map((item) => {
           const onPress =
             item.titulo === "Instalar aplicativo"
@@ -165,12 +200,18 @@ export default function ConfigScreen() {
                 ? () => router.navigate("/personalizar")
                 : undefined;
 
-          return <ItemLista key={item.titulo} item={{ ...item, onPress }} />;
+          return (
+            <ItemLista
+              key={item.titulo}
+              item={{ ...item, onPress }}
+            />
+          );
         })}
       </View>
 
       <View style={configStyles.secao}>
         <Text style={configStyles.secaoTitulo}>Contato</Text>
+
         <ItemLista
           item={{
             titulo: "Tire sua dúvida",
@@ -182,9 +223,6 @@ export default function ConfigScreen() {
         />
       </View>
 
-<<<<<<< HEAD
-      <Pressable style={configStyles.btnSair} onPress={() => router.replace("/")}>
-=======
       <Pressable
         style={configStyles.btnSair}
         onPress={async () => {
@@ -192,7 +230,6 @@ export default function ConfigScreen() {
           router.replace("/");
         }}
       >
->>>>>>> d05c4167590cc5908018b103dd92c8035acd053c
         <Text style={configStyles.txtBtnSair}>Sair da conta</Text>
       </Pressable>
 
@@ -217,3 +254,4 @@ export default function ConfigScreen() {
     </TelaComAbas>
   );
 }
+

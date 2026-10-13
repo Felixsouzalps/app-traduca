@@ -2,8 +2,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 
-export const API_URL = "https://traduca.adminfo.dev.br/api/v1";
 
+export const API_URL = "http://localhost:8081/api/v1";
 // Chave onde o login fica salvo no aparelho (vale 30 dias, igual ao token).
 const CHAVE_SESSAO = "traduca_sessao";
 
@@ -204,6 +204,138 @@ export type Material = {
 // Materiais de apoio do curso (todos os módulos liberados).
 export function buscarMateriais(idCurso: number) {
   return apiGet<Material[]>(`/aluno/cursos/${idCurso}/materiais`);
+}
+
+// Envia dados pra API usando o token do aluno logado.
+async function apiPost<T>(caminho: string, corpo: unknown): Promise<T> {
+  let resposta: Response;
+  try {
+    resposta = await fetch(`${API_URL}${caminho}`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${sessao.token}`,
+      },
+      body: JSON.stringify(corpo),
+    });
+  } catch {
+    throw new Error("Sem conexão com o servidor. Verifique sua internet.");
+  }
+
+  const json = await resposta.json().catch(() => null);
+
+  if (resposta.status === 401) {
+    await limparSessao();
+    router.replace("/");
+    throw new Error("Sua sessão expirou. Faça login novamente.");
+  }
+  if (!resposta.ok || !json?.success) {
+    throw new Error(json?.message ?? "Não foi possível completar a solicitação.");
+  }
+  return json as T;
+}
+
+export type AulaAgenda = {
+  id_aula: number;
+  titulo: string;
+  curso: string | null;
+  data: string | null;
+  hora: string | null;
+  duracao_minutos: number | null;
+  ao_vivo: boolean;
+  link_aula: string | null;
+  professor: string | null;
+  concluida: boolean;
+};
+
+export type Agenda = {
+  proxima_aula: AulaAgenda | null;
+  aulas: AulaAgenda[];
+};
+
+// Dados da tela Agenda: aulas de todos os cursos matriculados, em ordem.
+export function buscarAgenda() {
+  return apiGet<Agenda>("/aluno/agenda");
+}
+
+// Modal "Solicitar reagendamento". Devolve a mensagem de sucesso da API.
+export async function solicitarReagendamento(idAula: number, motivo: string): Promise<string> {
+  const resposta = await apiPost<{ message: string }>("/aluno/reagendamento/solicitar", {
+    aula_id: idAula,
+    motivo,
+  });
+  return resposta.message;
+}
+
+export type StatusAtividade = "pendente" | "enviada" | "corrigida";
+
+export type AtividadeResumo = {
+  id_atividade: number;
+  titulo: string;
+  descricao: string | null;
+  categoria: { codigo: string; label: string; cor: string } | null;
+  finalidade: string | null;
+  id_curso: number;
+  curso: string | null;
+  professor: string | null;
+  data_entrega: string | null;
+  tem_audio: boolean;
+  url_audio: string | null;
+  extensao_audio: string | null;
+  total_questoes: number;
+  status: StatusAtividade;
+  concluida: boolean;
+  nota: number | null;
+};
+
+export type ListaAtividades = {
+  total: number;
+  concluidas: number;
+  pendentes: number;
+  atividades: AtividadeResumo[];
+};
+
+
+export type QuestaoAtividade = {
+  id_questao: number;
+  numero: number;
+  enunciado: string;
+  tipo: "multipla_escolha" | "texto" | "pronuncia" | "audio";
+  opcoes: { letra: string; texto: string }[];
+  resposta_aluno: string | null;
+  correta: boolean | null;
+};
+
+
+export type AtividadeDetalhe = AtividadeResumo & {
+  feedback_professor: string | null;
+  data_envio: string | null;
+  pode_responder: boolean;
+  questoes: QuestaoAtividade[];
+};
+
+// Tela Atividades: atividades de todos os cursos matriculados + resumo.
+export function buscarAtividades() {
+  return apiGet<ListaAtividades>("/aluno/atividades");
+}
+
+// Abrir uma atividade (questões, resposta do aluno e correção).
+export function buscarAtividade(id: string | number) {
+  return apiGet<AtividadeDetalhe>(`/aluno/atividades/${id}`);
+}
+
+// Envia as respostas ({ id_questao: "B" | "texto" }). Devolve a mensagem de sucesso.
+export async function responderAtividade(id: number, respostas: Record<number, string>) {
+  const resposta = await apiPost<{ message: string }>(`/aluno/atividades/${id}/responder`, { respostas });
+  return resposta.message;
+}
+
+// "2026-07-30" → "30/07/2026".
+export function formatarData(data: string | null): string {
+  if (!data) return "";
+  const [ano, mes, dia] = data.split("-");
+  return `${dia}/${mes}/${ano}`;
 }
 
 // Nome do módulo para a tela: se já foi cadastrado como "Módulo 01: ...", usa como está;

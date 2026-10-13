@@ -1,15 +1,12 @@
+
 import { useState } from "react";
 import { router } from "expo-router";
-import { useState } from "react";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-<<<<<<< HEAD
-import NotificacoesModal from "@/components/notificacaoModal";
-=======
 import CentralNotificacoesModal from "@/components/central-notificacoes-modal";
->>>>>>> 12efd0b0311c6053b9f4536ea8d1612ccee6a85a
 import TabBarInferior from "@/components/tab-bar-inferior";
+
 import telaPadraoStyles from "@/styles/telaPadraoStyles";
 
 type TelaComAbasProps = {
@@ -18,18 +15,27 @@ type TelaComAbasProps = {
   children: React.ReactNode;
 };
 
-export default function TelaComAbas({ titulo, subtitulo, children }: TelaComAbasProps) {
-<<<<<<< HEAD
-  const [notificacoesVisivel, setNotificacoesVisivel] = useState(false);
-=======
-  const [modalNotificacoesVisivel, setModalNotificacoesVisivel] = useState(false);
->>>>>>> 12efd0b0311c6053b9f4536ea8d1612ccee6a85a
+export default function TelaComAbas({
+  titulo,
+  subtitulo,
+  children,
+}: TelaComAbasProps) {
+  const [modalNotificacoesVisivel, setModalNotificacoesVisivel] =
+    useState(false);
 
   return (
-    <SafeAreaView style={telaPadraoStyles.container} edges={["top"]}>
-      <ScrollView contentContainerStyle={telaPadraoStyles.conteudo}>
+    <SafeAreaView
+      style={telaPadraoStyles.container}
+      edges={["top"]}
+    >
+      <ScrollView
+        contentContainerStyle={telaPadraoStyles.conteudo}
+      >
         <View style={telaPadraoStyles.cabecalho}>
-          <Pressable style={telaPadraoStyles.btnVoltar} onPress={() => router.back()}>
+          <Pressable
+            style={telaPadraoStyles.btnVoltar}
+            onPress={() => router.back()}
+          >
             <Image
               source={require("@/assets/images/imgIcon/voltar-azul.png")}
               style={telaPadraoStyles.iconeVoltar}
@@ -37,19 +43,22 @@ export default function TelaComAbas({ titulo, subtitulo, children }: TelaComAbas
           </Pressable>
 
           <View style={telaPadraoStyles.tituloCabecalhoColuna}>
-            <Text style={telaPadraoStyles.tituloCabecalho}>{titulo}</Text>
+            <Text style={telaPadraoStyles.tituloCabecalho}>
+              {titulo}
+            </Text>
+
             {subtitulo ? (
-              <Text style={telaPadraoStyles.subtituloCabecalho}>{subtitulo}</Text>
+              <Text style={telaPadraoStyles.subtituloCabecalho}>
+                {subtitulo}
+              </Text>
             ) : null}
           </View>
 
           <Pressable
             style={telaPadraoStyles.btnNotificacao}
-<<<<<<< HEAD
-            onPress={() => setNotificacoesVisivel(true)}
-=======
             onPress={() => setModalNotificacoesVisivel(true)}
->>>>>>> 12efd0b0311c6053b9f4536ea8d1612ccee6a85a
+            accessibilityRole="button"
+            accessibilityLabel="Abrir notificações"
           >
             <Image
               source={require("@/assets/images/imgIcon/sino-azul.png")}
@@ -63,15 +72,9 @@ export default function TelaComAbas({ titulo, subtitulo, children }: TelaComAbas
 
       <TabBarInferior />
 
-<<<<<<< HEAD
-      <NotificacoesModal
-        visible={notificacoesVisivel}
-        onClose={() => setNotificacoesVisivel(false)}
-=======
       <CentralNotificacoesModal
         visible={modalNotificacoesVisivel}
         onClose={() => setModalNotificacoesVisivel(false)}
->>>>>>> 12efd0b0311c6053b9f4536ea8d1612ccee6a85a
       />
     </SafeAreaView>
   );

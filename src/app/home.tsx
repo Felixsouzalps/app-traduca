@@ -1,20 +1,18 @@
+
 import { useState } from "react";
 import { router } from "expo-router";
-<<<<<<< HEAD
-=======
-import { useState } from "react";
-
->>>>>>> 12efd0b0311c6053b9f4536ea8d1612ccee6a85a
-import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import {
+  Image,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import CentralNotificacoesModal from "@/components/central-notificacoes-modal";
-import homeStyles from "@/styles/homeStyles";
-<<<<<<< HEAD
-import NotificacoesModal from "@/components/notificacaoModal";
-=======
 import { fotoAlunoUrl, primeiroNomeAluno } from "@/services/api";
->>>>>>> d05c4167590cc5908018b103dd92c8035acd053c
+import homeStyles from "@/styles/homeStyles";
 
 const menuItens = [
   {
@@ -50,23 +48,24 @@ const menuItens = [
 ] as const;
 
 export default function HomeScreen() {
-<<<<<<< HEAD
-  const [notificacoesVisible, setNotificacoesVisible] = useState(false);
-=======
-  const [modalNotificacoesVisivel, setModalNotificacoesVisivel] = useState(false);
-<<<<<<< HEAD
->>>>>>> 12efd0b0311c6053b9f4536ea8d1612ccee6a85a
-=======
+  const [modalNotificacoesVisivel, setModalNotificacoesVisivel] =
+    useState(false);
+
   const foto = fotoAlunoUrl();
->>>>>>> d05c4167590cc5908018b103dd92c8035acd053c
 
   return (
-    <SafeAreaView style={homeStyles.container} edges={["top"]}>
+    <SafeAreaView
+      style={homeStyles.container}
+      edges={["top"]}
+    >
       <View style={homeStyles.cabecalho}>
         <View style={homeStyles.cabecalhoEsquerda}>
           <View style={homeStyles.avatar}>
             {foto ? (
-              <Image source={{ uri: foto }} style={homeStyles.avatarFoto} />
+              <Image
+                source={{ uri: foto }}
+                style={homeStyles.avatarFoto}
+              />
             ) : (
               <Image
                 source={require("@/assets/images/imgIcon/usuario.png")}
@@ -76,18 +75,21 @@ export default function HomeScreen() {
           </View>
 
           <View>
-            <Text style={homeStyles.boasVindas}>Bem-vindo</Text>
-            <Text style={homeStyles.nomeAluno}>{primeiroNomeAluno()}!</Text>
+            <Text style={homeStyles.boasVindas}>
+              Bem-vindo
+            </Text>
+
+            <Text style={homeStyles.nomeAluno}>
+              {primeiroNomeAluno()}!
+            </Text>
           </View>
         </View>
 
         <Pressable
           style={homeStyles.btnNotificacao}
-<<<<<<< HEAD
-          onPress={() => setNotificacoesVisible(true)}
-=======
           onPress={() => setModalNotificacoesVisivel(true)}
->>>>>>> 12efd0b0311c6053b9f4536ea8d1612ccee6a85a
+          accessibilityRole="button"
+          accessibilityLabel="Abrir notificações"
         >
           <Image
             source={require("@/assets/images/imgIcon/sino-azul.png")}
@@ -106,7 +108,10 @@ export default function HomeScreen() {
             ]}
             onPress={() => router.navigate(item.rota as never)}
           >
-            <Image source={item.icone} style={homeStyles.cardIcone} />
+            <Image
+              source={item.icone}
+              style={homeStyles.cardIcone}
+            />
 
             <Text style={homeStyles.cardTexto}>
               {item.label}
@@ -115,16 +120,11 @@ export default function HomeScreen() {
         ))}
       </ScrollView>
 
-<<<<<<< HEAD
-      <NotificacoesModal
-        visible={notificacoesVisible}
-        onClose={() => setNotificacoesVisible(false)}
-=======
       <CentralNotificacoesModal
         visible={modalNotificacoesVisivel}
         onClose={() => setModalNotificacoesVisivel(false)}
->>>>>>> 12efd0b0311c6053b9f4536ea8d1612ccee6a85a
       />
     </SafeAreaView>
   );
 }
+
