@@ -1,10 +1,10 @@
+
 import { StyleSheet } from "react-native";
 import { cores } from "./variaveis";
 
 const telaPadraoStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: cores.branco,
   },
 
   conteudo: {
@@ -43,12 +43,10 @@ const telaPadraoStyles = StyleSheet.create({
   tituloCabecalho: {
     fontSize: 16,
     fontWeight: "bold",
-    color: cores.preto,
   },
 
   subtituloCabecalho: {
     fontSize: 12,
-    color: cores.cinzaEscuro,
     marginTop: 2,
   },
 
@@ -56,7 +54,6 @@ const telaPadraoStyles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: cores.cinza,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -84,12 +81,10 @@ const telaPadraoStyles = StyleSheet.create({
   vazioTexto: {
     fontSize: 16,
     fontWeight: "bold",
-    color: cores.preto,
   },
 
   vazioSubtexto: {
     fontSize: 13,
-    color: cores.cinzaEscuro,
     marginTop: 4,
     textAlign: "center",
   },

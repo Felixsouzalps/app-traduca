@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { ActivityIndicator, Image, Modal, Pressable, ScrollView, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
@@ -10,7 +10,8 @@ import {
   marcarTodasNotificacoesLidas,
   Notificacao,
 } from "@/services/api";
-import centralNotificacoesStyle from "@/styles/centralNotificacoesStyle";
+import { useThemePreference } from "@/contexts/ThemeContext";
+import { criarCentralNotificacoesStyle } from "@/styles/centralNotificacoesStyle";
 import { cores } from "@/styles/variaveis";
 
 type CentralNotificacoesModalProps = {
@@ -70,6 +71,11 @@ export default function CentralNotificacoesModal({
   onClose,
   onNaoLidas,
 }: CentralNotificacoesModalProps) {
+  const { theme } = useThemePreference();
+  const centralNotificacoesStyle = useMemo(
+    () => criarCentralNotificacoesStyle(theme),
+    [theme],
+  );
   const [avisos, setAvisos] = useState<Notificacao[]>([]);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");

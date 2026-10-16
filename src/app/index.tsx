@@ -3,11 +3,13 @@ import { useState } from "react";
 
 import { View, Text, Image, TextInput, Pressable, ActivityIndicator } from "react-native";
 
+import { useTheme } from "@/hooks/use-theme";
 import globalStyle from "@/styles/globalStyles";
 import loginStyles from "@/styles/loginStyles";
 import { loginAluno, sessao } from "@/services/api";
 
 export default function LoginScreen() {
+  const tema = useTheme();
   const [verSenha, setVerSenha] = useState(false);
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -44,7 +46,7 @@ export default function LoginScreen() {
   }
 
   return (
-       <View style={globalStyle.container}>
+       <View style={[globalStyle.container, { backgroundColor: tema.background }]}>
       <Image
         source={require('@/assets/images/imgIcon/logo-traducaapp.png')}
         style={globalStyle.logoMaior}
@@ -55,12 +57,12 @@ export default function LoginScreen() {
     <View style={loginStyles.conteudo}>
   
    
-      <Text style={loginStyles.titulo}>Bem-vindo(a)!</Text>
-      <Text>Faça seu login para continuar</Text>
+      <Text style={[loginStyles.titulo, { color: tema.text }]}>Bem-vindo(a)!</Text>
+      <Text style={{ color: tema.textSecondary }}>Faça seu login para continuar</Text>
  
                     {/* Formulario de login */}
               <View style={loginStyles.form}>
-                <View style={loginStyles.input}>
+                <View style={[loginStyles.input, { backgroundColor: tema.backgroundElement, borderColor: tema.border }]}>
                   <Image
                     source={require("@/assets/images/imgIcon/email-azul.png")}
                     style={loginStyles.icone}
@@ -68,24 +70,24 @@ export default function LoginScreen() {
  
                   <TextInput
                     placeholder="E-mail"
-                    placeholderTextColor="#888888"
+                    placeholderTextColor={tema.textSecondary}
                     keyboardType="email-address"
                     autoCapitalize="none"
-                    style={loginStyles.TextInput}
+                    style={[loginStyles.TextInput, { color: tema.text }]}
                     value={email}
                     onChangeText={setEmail}
                   />
                 </View>
  
-                <View style={loginStyles.input}>
+                <View style={[loginStyles.input, { backgroundColor: tema.backgroundElement, borderColor: tema.border }]}>
                   <Image
                     source={require("@/assets/images/imgIcon/senha-azul.png")}
                     style={loginStyles.icone}
                   />
                   <TextInput
                     placeholder="Senha"
-                    placeholderTextColor="#888888"
-                    style={loginStyles.TextInput}
+                    placeholderTextColor={tema.textSecondary}
+                    style={[loginStyles.TextInput, { color: tema.text }]}
                     secureTextEntry={!verSenha}
                     value={senha}
                     onChangeText={setSenha}

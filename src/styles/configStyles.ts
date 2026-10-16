@@ -1,3 +1,4 @@
+
 import { StyleSheet } from "react-native";
 import { cores } from "./variaveis";
 
@@ -20,6 +21,7 @@ const configStyles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginRight: 14,
+    overflow: "hidden",
   },
 
   avatarIcone: {
@@ -37,19 +39,16 @@ const configStyles = StyleSheet.create({
   boasVindasTitulo: {
     fontSize: 17,
     fontWeight: "bold",
-    color: cores.preto,
   },
 
   boasVindasSubtitulo: {
     fontSize: 12,
-    color: cores.cinzaEscuro,
     marginTop: 2,
   },
 
   secaoTitulo: {
     fontSize: 15,
     fontWeight: "bold",
-    color: cores.preto,
     marginBottom: 12,
   },
 
@@ -89,12 +88,10 @@ const configStyles = StyleSheet.create({
   itemTitulo: {
     fontSize: 14,
     fontWeight: "bold",
-    color: cores.preto,
   },
 
   itemSubtitulo: {
     fontSize: 12,
-    color: cores.cinzaEscuro,
     marginTop: 2,
   },
 

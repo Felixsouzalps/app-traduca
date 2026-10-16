@@ -8,6 +8,9 @@ import ModalIphone from "@/components/modal-iphone";
 import ModalPermissaoInstalacao from "@/components/modal-permissao-instalacao";
 import TelaComAbas from "@/components/tela-com-abas";
 
+import { useThemePreference } from "@/contexts/ThemeContext";
+import { useTheme } from "@/hooks/use-theme";
+
 import {
   fotoAlunoUrl,
   logoutAluno,
@@ -48,12 +51,6 @@ const appItens: ItemConfig[] = [
     acao: "instalar",
   },
   {
-    titulo: "Personalizar app",
-    subtitulo: "Personalize seu aplicativo",
-    icone: require("@/assets/images/imgIcon/personalizar-azul.png"),
-    acao: "seta",
-  },
-  {
     titulo: "Ativar notificações",
     subtitulo: "Receba avisos sobre atividades e aulas",
     icone: require("@/assets/images/imgIcon/sino-azul.png"),
@@ -63,13 +60,23 @@ const appItens: ItemConfig[] = [
 
 function ItemLista({ item }: { item: ItemConfig }) {
   const [notificacoesAtivas, setNotificacoesAtivas] = useState(true);
+  const tema = useTheme();
 
   return (
     <Pressable
-      style={configStyles.itemCard}
+      style={[
+        configStyles.itemCard,
+        { backgroundColor: tema.backgroundElement },
+      ]}
       onPress={item.acao === "notificacao" ? undefined : item.onPress}
+      accessibilityRole={item.acao === "notificacao" ? undefined : "button"}
     >
-      <View style={configStyles.itemIconeBox}>
+      <View
+        style={[
+          configStyles.itemIconeBox,
+          { backgroundColor: tema.backgroundSelected },
+        ]}
+      >
         <Image
           source={item.icone}
           style={configStyles.itemIcone}
@@ -77,9 +84,19 @@ function ItemLista({ item }: { item: ItemConfig }) {
         />
       </View>
 
-      <View style={configStyles.itemCorpo}>
-        <Text style={configStyles.itemTitulo}>{item.titulo}</Text>
-        <Text style={configStyles.itemSubtitulo}>{item.subtitulo}</Text>
+      <View style={[configStyles.itemCorpo, { flex: 1 }]}>
+        <Text style={[configStyles.itemTitulo, { color: tema.text }]}>
+          {item.titulo}
+        </Text>
+
+        <Text
+          style={[
+            configStyles.itemSubtitulo,
+            { color: tema.textSecondary },
+          ]}
+        >
+          {item.subtitulo}
+        </Text>
       </View>
 
       {item.acao === "seta" && (
@@ -93,6 +110,8 @@ function ItemLista({ item }: { item: ItemConfig }) {
         <Pressable
           style={configStyles.btnInstalar}
           onPress={item.onPress}
+          accessibilityRole="button"
+          accessibilityLabel="Instalar aplicativo"
         >
           <Text style={configStyles.txtBtnInstalar}>Instalar</Text>
         </Pressable>
@@ -107,9 +126,115 @@ function ItemLista({ item }: { item: ItemConfig }) {
             true: cores.azul,
           }}
           thumbColor={cores.branco}
+          accessibilityLabel="Ativar notificações"
         />
       )}
     </Pressable>
+  );
+}
+
+function SeletorAparencia() {
+  const { preference, setPreference } = useThemePreference();
+  const tema = useTheme();
+
+  const opcoes = [
+    { label: "Claro", value: "light" as const },
+    { label: "Escuro", value: "dark" as const },
+    { label: "Sistema", value: "system" as const },
+  ];
+
+  return (
+    <View
+      style={[
+        configStyles.itemCard,
+        { backgroundColor: tema.backgroundElement },
+      ]}
+    >
+      <View
+        style={[
+          configStyles.itemIconeBox,
+          { backgroundColor: tema.backgroundSelected },
+        ]}
+      >
+        <Image
+          source={require("@/assets/images/imgIcon/personalizar-azul.png")}
+          style={configStyles.itemIcone}
+          resizeMode="contain"
+        />
+      </View>
+
+      <View style={[configStyles.itemCorpo, { flex: 1 }]}>
+        <Text style={[configStyles.itemTitulo, { color: tema.text }]}>
+          Aparência
+        </Text>
+
+        <Text
+          style={[
+            configStyles.itemSubtitulo,
+            { color: tema.textSecondary },
+          ]}
+        >
+          Escolha o tema do aplicativo
+        </Text>
+
+        {opcoes.map((opcao) => {
+          const selecionado = preference === opcao.value;
+
+          return (
+            <Pressable
+              key={opcao.value}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: selecionado }}
+              onPress={() => {
+                void setPreference(opcao.value).catch((erro) => {
+                  console.error("Não foi possível salvar o tema:", erro);
+                });
+              }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                paddingVertical: 10,
+                gap: 10,
+              }}
+            >
+              <View
+                style={{
+                  width: 20,
+                  height: 20,
+                  borderRadius: 10,
+                  borderWidth: 2,
+                  borderColor: selecionado
+                    ? cores.azul
+                    : tema.textSecondary,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {selecionado && (
+                  <View
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: 5,
+                      backgroundColor: cores.azul,
+                    }}
+                  />
+                )}
+              </View>
+
+              <Text
+                style={[
+                  configStyles.itemTitulo,
+                  { color: tema.text },
+                ]}
+              >
+                {opcao.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
   );
 }
 
@@ -122,6 +247,19 @@ export default function ConfigScreen() {
   const [modalPermissaoVisivel, setModalPermissaoVisivel] =
     useState(false);
 
+  const tema = useTheme();
+  const { theme: temaAtual } = useThemePreference();
+  <View style={{ backgroundColor: "#121318", padding: 16 }}>
+  <Text style={{ color: "#F5F5F7", fontSize: 20 }}>
+    TESTE: TEXTO BRANCO
+  </Text>
+
+  <Text style={{ color: "#FF0000", fontSize: 20 }}>
+    TESTE: TEXTO VERMELHO
+  </Text>
+</View>
+
+
   const foto = fotoAlunoUrl();
 
   return (
@@ -129,7 +267,12 @@ export default function ConfigScreen() {
       titulo="Configurações"
       subtitulo="Gerencie seu perfil, desempenho, entre outros"
     >
-      <View style={configStyles.cardBoasVindas}>
+      <View
+        style={[
+          configStyles.cardBoasVindas,
+          { backgroundColor: tema.backgroundElement },
+        ]}
+      >
         <View style={configStyles.avatar}>
           {foto ? (
             <Image
@@ -145,18 +288,35 @@ export default function ConfigScreen() {
         </View>
 
         <View style={{ flex: 1 }}>
-          <Text style={configStyles.boasVindasTitulo}>
+          <Text
+            style={[
+              configStyles.boasVindasTitulo,
+              { color: tema.text },
+            ]}
+          >
             Olá, {primeiroNomeAluno()}!
           </Text>
 
-          <Text style={configStyles.boasVindasSubtitulo}>
+          <Text
+            style={[
+              configStyles.boasVindasSubtitulo,
+              { color: tema.textSecondary },
+            ]}
+          >
             Acesse e organize sua experiência no app
           </Text>
         </View>
       </View>
 
       <View style={configStyles.secao}>
-        <Text style={configStyles.secaoTitulo}>Meu Progresso</Text>
+        <Text
+          style={[
+            configStyles.secaoTitulo,
+            { color: tema.text },
+          ]}
+        >
+          Meu Progresso
+        </Text>
 
         <ItemLista
           item={{
@@ -170,7 +330,14 @@ export default function ConfigScreen() {
       </View>
 
       <View style={configStyles.secao}>
-        <Text style={configStyles.secaoTitulo}>Minha conta</Text>
+        <Text
+          style={[
+            configStyles.secaoTitulo,
+            { color: tema.text },
+          ]}
+        >
+          Minha conta
+        </Text>
 
         {minhaConta.map((item) => {
           const onPress =
@@ -190,15 +357,22 @@ export default function ConfigScreen() {
       </View>
 
       <View style={configStyles.secao}>
-        <Text style={configStyles.secaoTitulo}>App</Text>
+        <Text
+          style={[
+            configStyles.secaoTitulo,
+            { color: tema.text },
+          ]}
+        >
+          App
+        </Text>
+
+        <SeletorAparencia />
 
         {appItens.map((item) => {
           const onPress =
             item.titulo === "Instalar aplicativo"
               ? () => setModalPermissaoVisivel(true)
-              : item.titulo === "Personalizar app"
-                ? () => router.navigate("/personalizar")
-                : undefined;
+              : undefined;
 
           return (
             <ItemLista
@@ -210,7 +384,14 @@ export default function ConfigScreen() {
       </View>
 
       <View style={configStyles.secao}>
-        <Text style={configStyles.secaoTitulo}>Contato</Text>
+        <Text
+          style={[
+            configStyles.secaoTitulo,
+            { color: tema.text },
+          ]}
+        >
+          Contato
+        </Text>
 
         <ItemLista
           item={{
@@ -226,9 +407,14 @@ export default function ConfigScreen() {
       <Pressable
         style={configStyles.btnSair}
         onPress={async () => {
-          await logoutAluno();
-          router.replace("/");
+          try {
+            await logoutAluno();
+            router.replace("/");
+          } catch (error) {
+            console.error("Não foi possível sair da conta:", error);
+          }
         }}
+        accessibilityRole="button"
       >
         <Text style={configStyles.txtBtnSair}>Sair da conta</Text>
       </Pressable>
@@ -254,4 +440,3 @@ export default function ConfigScreen() {
     </TelaComAbas>
   );
 }
-

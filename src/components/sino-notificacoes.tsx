@@ -1,11 +1,12 @@
 import { useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { Image, ImageStyle, Pressable, StyleProp, Text, View, ViewStyle } from "react-native";
 
 import CentralNotificacoesModal from "@/components/central-notificacoes-modal";
+import { useThemePreference } from "@/contexts/ThemeContext";
 import { buscarNotificacoes, sessao } from "@/services/api";
-import centralNotificacoesStyle from "@/styles/centralNotificacoesStyle";
+import { criarCentralNotificacoesStyle } from "@/styles/centralNotificacoesStyle";
 
 type SinoNotificacoesProps = {
   estiloBotao: StyleProp<ViewStyle>;
@@ -15,6 +16,11 @@ type SinoNotificacoesProps = {
 // O sino do topo das telas: número vermelho com os avisos não lidos e,
 // ao tocar, a Central de notificações.
 export default function SinoNotificacoes({ estiloBotao, estiloIcone }: SinoNotificacoesProps) {
+  const { theme } = useThemePreference();
+  const centralNotificacoesStyle = useMemo(
+    () => criarCentralNotificacoesStyle(theme),
+    [theme],
+  );
   const [aberta, setAberta] = useState(false);
   const [naoLidas, setNaoLidas] = useState(0);
 

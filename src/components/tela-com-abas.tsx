@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 
-import { useState } from "react";
-=======
->>>>>>> f1d6091b2b5498168d1b777d1a17ee1a0c8925b1
 import { router } from "expo-router";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -10,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import SinoNotificacoes from "@/components/sino-notificacoes";
 import TabBarInferior from "@/components/tab-bar-inferior";
 
+import { useTheme } from "@/hooks/use-theme";
 import telaPadraoStyles from "@/styles/telaPadraoStyles";
 
 type TelaComAbasProps = {
@@ -18,24 +15,23 @@ type TelaComAbasProps = {
   children: React.ReactNode;
 };
 
-<<<<<<< HEAD
 export default function TelaComAbas({
   titulo,
   subtitulo,
   children,
 }: TelaComAbasProps) {
-  const [modalNotificacoesVisivel, setModalNotificacoesVisivel] =
-    useState(false);
+  const tema = useTheme();
 
-=======
-export default function TelaComAbas({ titulo, subtitulo, children }: TelaComAbasProps) {
->>>>>>> f1d6091b2b5498168d1b777d1a17ee1a0c8925b1
   return (
     <SafeAreaView
-      style={telaPadraoStyles.container}
+      style={[
+        telaPadraoStyles.container,
+        { backgroundColor: tema.background },
+      ]}
       edges={["top"]}
     >
       <ScrollView
+        style={{ backgroundColor: tema.background }}
         contentContainerStyle={telaPadraoStyles.conteudo}
       >
         <View style={telaPadraoStyles.cabecalho}>
@@ -50,35 +46,31 @@ export default function TelaComAbas({ titulo, subtitulo, children }: TelaComAbas
           </Pressable>
 
           <View style={telaPadraoStyles.tituloCabecalhoColuna}>
-            <Text style={telaPadraoStyles.tituloCabecalho}>
+            <Text
+              style={[
+                telaPadraoStyles.tituloCabecalho,
+                { color: tema.text },
+              ]}
+            >
               {titulo}
             </Text>
 
             {subtitulo ? (
-              <Text style={telaPadraoStyles.subtituloCabecalho}>
+              <Text
+                style={[
+                  telaPadraoStyles.subtituloCabecalho,
+                  { color: tema.textSecondary },
+                ]}
+              >
                 {subtitulo}
               </Text>
             ) : null}
           </View>
 
-<<<<<<< HEAD
-          <Pressable
-            style={telaPadraoStyles.btnNotificacao}
-            onPress={() => setModalNotificacoesVisivel(true)}
-            accessibilityRole="button"
-            accessibilityLabel="Abrir notificações"
-          >
-            <Image
-              source={require("@/assets/images/imgIcon/sino-azul.png")}
-              style={telaPadraoStyles.iconeNotificacao}
-            />
-          </Pressable>
-=======
           <SinoNotificacoes
             estiloBotao={telaPadraoStyles.btnNotificacao}
             estiloIcone={telaPadraoStyles.iconeNotificacao}
           />
->>>>>>> f1d6091b2b5498168d1b777d1a17ee1a0c8925b1
         </View>
 
         {children}

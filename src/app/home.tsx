@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import SinoNotificacoes from "@/components/sino-notificacoes";
+import { useTheme } from "@/hooks/use-theme";
 import { fotoAlunoUrl, primeiroNomeAluno } from "@/services/api";
 import homeStyles from "@/styles/homeStyles";
 
@@ -48,15 +49,16 @@ const menuItens = [
 
 export default function HomeScreen() {
   const foto = fotoAlunoUrl();
+  const tema = useTheme();
 
   return (
     <SafeAreaView
-      style={homeStyles.container}
+      style={[homeStyles.container, { backgroundColor: tema.background }]}
       edges={["top"]}
     >
-      <View style={homeStyles.cabecalho}>
+      <View style={[homeStyles.cabecalho, { backgroundColor: tema.backgroundElement }]}>
         <View style={homeStyles.cabecalhoEsquerda}>
-          <View style={homeStyles.avatar}>
+          <View style={[homeStyles.avatar, { backgroundColor: tema.background }]}>
             {foto ? (
               <Image
                 source={{ uri: foto }}
@@ -71,29 +73,30 @@ export default function HomeScreen() {
           </View>
 
           <View>
-            <Text style={homeStyles.boasVindas}>
+            <Text style={[homeStyles.boasVindas, { color: tema.textSecondary }]}>
               Bem-vindo
             </Text>
 
-            <Text style={homeStyles.nomeAluno}>
+            <Text style={[homeStyles.nomeAluno, { color: tema.text }]}>
               {primeiroNomeAluno()}!
             </Text>
           </View>
         </View>
 
         <SinoNotificacoes
-          estiloBotao={homeStyles.btnNotificacao}
+          estiloBotao={[homeStyles.btnNotificacao, { backgroundColor: tema.background }]}
           estiloIcone={homeStyles.iconeNotificacao}
         />
       </View>
 
-      <ScrollView contentContainerStyle={homeStyles.grid}>
+      <ScrollView style={{ backgroundColor: tema.background }} contentContainerStyle={homeStyles.grid}>
         {menuItens.map((item) => (
           <Pressable
             key={item.label}
             style={({ pressed }) => [
               homeStyles.card,
-              pressed && homeStyles.cardPressed,
+              { backgroundColor: tema.backgroundElement, borderColor: tema.border },
+              pressed && { backgroundColor: tema.backgroundSelected },
             ]}
             onPress={() => router.navigate(item.rota as never)}
           >
@@ -102,7 +105,7 @@ export default function HomeScreen() {
               style={homeStyles.cardIcone}
             />
 
-            <Text style={homeStyles.cardTexto}>
+            <Text style={[homeStyles.cardTexto, { color: tema.text }]}>
               {item.label}
             </Text>
           </Pressable>

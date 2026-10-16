@@ -2,19 +2,17 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 
-<<<<<<< HEAD
 
-export const API_URL = "http://localhost:8081/api/v1";
-// Chave onde o login fica salvo no aparelho (vale 30 dias, igual ao token).
-=======
+
 import { apagarToken, guardarToken, lerToken } from "@/services/cofre";
 import { esquecerCursoEscolhido } from "@/services/curso-escolhido";
 
-export const API_URL = "https://traduca.adminfo.dev.br/api/v1";
+// export const API_URL = "https://traduca.adminfo.dev.br/api/v1";
 
+export const API_URL = "http://localhost:8081/api/v1";
 // Chave onde os dados do aluno (nome, e-mail, foto) ficam salvos no aparelho.
 // O token NÃO fica aqui: no celular ele vai para o cofre (ver cofre.ts).
->>>>>>> f1d6091b2b5498168d1b777d1a17ee1a0c8925b1
+
 const CHAVE_SESSAO = "traduca_sessao";
 
 export type Aluno = {
